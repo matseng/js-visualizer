@@ -1,0 +1,20 @@
+{
+  "name": "angular-d3-helloWorld",
+  "version": "0.0.1",
+  "authors": [
+    "Mike and Jeanette"
+  ],
+  "description": "hello world",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.2.12",
+    "d3": "~3.4.3"
+  }
+}
