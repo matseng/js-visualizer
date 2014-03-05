@@ -10,6 +10,7 @@ myApp.directive('myDirective', function(){
     restrict: 'E',
     templateUrl: 'messageExample.html',
     link: function(scope, element, attrs) {
+      //will add scope text to visualization
       var dataset = {
         apples: [53245, 28479, 19697, 24037, 40245]
       };
