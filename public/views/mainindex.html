@@ -1,6 +1,60 @@
+<style type="text/css">
+.codeinput {
+  border: 5px solid black;
+}
+svg {
+  border: 5px solid black;  
+}
+</style>
+
 <div class="container index" ng-controller='MainController'>
-    {{ message }}
+  <br><br><br><br><br>
+  <div class='container'>
+    <div class='row'>
+      <div id='codePane' class='col-md-5'>
+
+        Enter your JS code here:
+        <textarea rows="23" cols="70" class='codeinput' type="text" ng-model="codeText"></textarea>
+        <button class='codeinputbutton' ng-click="visualize(codeText)">Visualize!</button><br><br>
+      </div>
+
+      <div id='visPane' class='col-md-7'>
+        <br>
+        <div class='visArea'> 
+        </div>
+      </div>        
+    </div>
+  </div>
 </div>
 
+<script type="text/javascript">
+
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 515 - margin.left - margin.right,
+    height = 512 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width-50]);
+
+var y = d3.scale.linear()
+    .range([height-50, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var svg = d3.select(".visArea").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+</script>
+
+<link rel='stylesheet' href="../styles/bootstrapDist/css/bootstrap.min.css" >
 
 
