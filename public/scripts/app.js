@@ -13,18 +13,18 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
   })
   .controller('MainController', function($scope) {
     $scope.message = 'Hello World';
-    $scope.visualize = function(code) {
+    $scope.visualize = function() {
       svg.append('circle')
         .attr({'r': 20, 'class': 'newdatapoint'})
         .attr('cx', 40)
         .attr('cy', 20)
         .attr('fill', 'green')
-        .selectAll('text')
-        .append('text')
-        .attr('x', 40)
-        .attr('y', 20)
-        .style('stroke', 'black')
-        .text('i')
+        // .selectAll('text')
+        // .append('text')
+        // .attr('x', 40)
+        // .attr('y', 20)
+        // .style('stroke', 'black')
+        // .text('i')
 
     };
   });
