@@ -14,7 +14,8 @@ svg {
       <div id='codePane' class='col-md-5'>
 
         Enter your JS code here:
-        <textarea rows="23" cols="70" class='codeinput' type="text" ng-model="codeText"></textarea>
+        <div id="editor" style="height: 475px; width: 450px"></div>    
+        <!-- <textarea rows="23" cols="70" class='codeinput' type="text" ng-model="codeText"></textarea> -->
         <button class='codeinputbutton' ng-click="visualize(codeText)">Visualize!</button><br><br>
       </div>
 
@@ -29,23 +30,15 @@ svg {
 
 <script type="text/javascript">
 
+var editor = ace.edit("editor");
+editor.setTheme("ace/theme/monokai");
+editor.getSession().setMode("ace/mode/javascript");
+
+
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = 515 - margin.left - margin.right,
     height = 512 - margin.top - margin.bottom;
 
-var x = d3.scale.linear()
-    .range([0, width-50]);
-
-var y = d3.scale.linear()
-    .range([height-50, 0]);
-
-var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom");
-
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left");
 
 var svg = d3.select(".visArea").append("svg")
     .attr("width", width)
