@@ -25,7 +25,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     //     .style('stroke', 'black')
     //     .text('i');
     // };
-    $scope.codeText = "var result = []; \nfunction fibonacci(n, output) { \n  var a = 1, b = 1, sum; \n  for (var i = 0; i < n; i++) { \n    output.push(a); \n    sum = a + b; \n    a = b; \n    b = sum; \n  }\n}\nfibonacci(16, result);\nalert(result.join(', '));";
+    $scope.codeText = "var x = 1;var fun1 = function(){var y = 2;var fun2 = function(){var z = 3;var fun3 = function(){var alpha = 4}();}();}();";//"var result = []; \nfunction fibonacci(n, output) { \n  var a = 1, b = 1, sum; \n  for (var i = 0; i < n; i++) { \n    output.push(a); \n    sum = a + b; \n    a = b; \n    b = sum; \n  }\n}\nfibonacci(16, result);\nalert(result.join(', '));";
     $scope.remove = function(data) {
         data.nodes = [];
     };
@@ -86,12 +86,12 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         if(jsiScope.parentScope === null){
           return vizScope;
         }else{
-          vizScope.parent = [{name: "scope "+scopeCount, variables: [], parent: []}];
-          buildScopes(jsiScope.parentScope, vizScope.parent[0]);
-          return vizScope;
+          var child = vizScope;
+          vizScope = {name: "scope "+scopeCount, variables: [], child: [child]};
+          return buildScopes(jsiScope.parentScope, vizScope);
         }
       };
-      $scope.tree[0] = buildScopes(window.myInterpreter.getScope(), {name: "Global", variables:[], parent:[]});
+      $scope.tree[0] = buildScopes(window.myInterpreter.getScope(), {name: "innermost", variables:[], child:[]});
       // console.log(JSON.stringify($scope.tree));
     };
 
@@ -111,7 +111,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     //   }
     //   field.focus();
     // };
-    $scope.tree = [{name: "Global", variables: [], parent: [{name: "Global", variables: [1,2,3], parent: []}]}];
+    $scope.tree = [{name: "inermost", variables: [], child: [{name: "child", variables: [], child: []}]}];
   });
 
 

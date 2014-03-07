@@ -27,9 +27,9 @@ svg {
         <br>
         <div class='visArea'>
           <script type="text/ng-template"  id="tree_item_renderer.html">
-              {{node.name}}{{node.variables}}
+              {{node.name}} {{node.variables}}
               <div>
-                  <div ng-repeat="node in node.parent" ng-include="'tree_item_renderer.html'"></div>
+                  <div ng-repeat="node in node.child" ng-include="'tree_item_renderer.html'"></div>
               </div>
           </script>
           <div>
