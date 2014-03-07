@@ -27,12 +27,16 @@ svg {
         <br>
         <div class='visArea'>
           <script type="text/ng-template"  id="tree_item_renderer.html">
-              {{node.name}} {{node.variables}}
-              <div>
+              Scope Level: {{node.name}} <br/>
+              Variables: <br/>
+              <div class="variable" ng-repeat="variable in node.variables">
+                {{variable}}
+              </div>
+              <div class="scope">
                   <div ng-repeat="node in node.child" ng-include="'tree_item_renderer.html'"></div>
               </div>
           </script>
-          <div>
+          <div class="scope">
               <div ng-repeat="node in tree" ng-include="'tree_item_renderer.html'"></div>
           </div>
         </div>
