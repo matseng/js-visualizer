@@ -148,3 +148,8 @@ body {
     margin-top: 120px;
   }
 }
+
+.scope {
+  border: 1px solid;
+  border-color: black;
+}
