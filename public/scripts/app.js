@@ -84,14 +84,15 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         scopeCount++;
         vizScope.variables = Object.keys(jsiScope.properties);
         if(jsiScope.parentScope === null){
+          vizScope.name = "Global";
           return vizScope;
         }else{
           var child = vizScope;
-          vizScope = {name: "scope "+scopeCount, variables: [], child: [child]};
+          vizScope = {name: scopeCount, variables: [], child: [child]};
           return buildScopes(jsiScope.parentScope, vizScope);
         }
       };
-      $scope.tree[0] = buildScopes(window.myInterpreter.getScope(), {name: "innermost", variables:[], child:[]});
+      $scope.tree[0] = buildScopes(window.myInterpreter.getScope(), {name: "0", variables:[], child:[]});
       // console.log(JSON.stringify($scope.tree));
     };
 
@@ -111,7 +112,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     //   }
     //   field.focus();
     // };
-    $scope.tree = [{name: "inermost", variables: [], child: [{name: "child", variables: [], child: []}]}];
+    $scope.tree = [{name: "Global", variables: [], child: [{name: "child", variables: [], child: []}]}];
   });
 
 
