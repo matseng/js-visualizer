@@ -5,6 +5,10 @@
 svg {
   border: 5px solid black;
 }
+#editor {
+  height: 475px; 
+  width: 450px
+}
 </style>
 
 <div class="container index" ng-controller='MainController'>
@@ -14,7 +18,8 @@ svg {
       <div id='codePane' class='col-md-5'>
 
         Enter your JS code here:
-        <div id="editor" style="height: 475px; width: 450px"></div>    
+        <div id='editor' ace-editor ng-model='codeText'></div>
+        <!-- <div id="editor" style="height: 475px; width: 450px"></div>     -->
         <!-- <textarea rows="23" cols="70" class='codeinput' type="text" ng-model="codeText"></textarea> -->
 
   <button ng-click="parseButton()">Parse</button>
@@ -47,14 +52,9 @@ svg {
 
 <script type="text/javascript">
 
-var editor = ace.edit("editor");
-editor.setTheme("ace/theme/monokai");
-editor.getSession().setMode("ace/mode/javascript");
-
-
-var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 515 - margin.left - margin.right,
-    height = 512 - margin.top - margin.bottom;
+// var margin = {top: 20, right: 20, bottom: 30, left: 50},
+//     width = 515 - margin.left - margin.right,
+//     height = 512 - margin.top - margin.bottom;
 
 </script>
 
