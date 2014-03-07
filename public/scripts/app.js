@@ -26,7 +26,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     //     .style('stroke', 'black')
     //     .text('i');
     // };
-    $scope.codeText = "var x = 1;var fun1 = function(){var y = 2; var fun2 = function(){var z = 3;var fun3 = function(){var x = y}();}();}();";//"var result = []; \nfunction fibonacci(n, output) { \n  var a = 1, b = 1, sum; \n  for (var i = 0; i < n; i++) { \n    output.push(a); \n    sum = a + b; \n    a = b; \n    b = sum; \n  }\n}\nfibonacci(16, result);\nalert(result.join(', '));";
+    $scope.codeText;
     $scope.remove = function(data) {
         data.nodes = [];
     };
@@ -38,8 +38,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
 
     $scope.parseButton = function() {
-      var code = $scope.codeText;
-      console.log(code);
+      var code = $scope.editor.getValue();
+      // var code = $scope.codeText;
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
     };
@@ -126,7 +126,33 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     //   }
     //   field.focus();
     // };
+
     $scope.tree = [{name: "Global", variables: [], child: [{name: "child", variables: [], child: []}]}];
+  })
+
+  .directive('aceEditor', function() {
+    return {
+      require: '?ngModel',
+      link:link
+    };
+    function link(scope, element, attrs, ngModel) {
+      scope.editor = ace.edit("editor");
+      scope.editor.setTheme("ace/theme/monokai");
+      scope.editor.getSession().setMode("ace/mode/javascript");
+      scope.editor.setValue(scope.codeText);
+
+    //   ngModel.$render = function () {
+    //     editor.setValue(ngModel.$viewValue);
+    //   };
+
+    //   editor.on('change', function() {
+    //     scope.$apply = function() {
+    //       var content = editor.getValue();
+    //       ngModel.$setViewValue(content);
+    //       console.log(scope.codeText);
+    //     }
+    //   });      
+    }
   });
 
 
