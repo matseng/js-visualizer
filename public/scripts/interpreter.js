@@ -35,7 +35,6 @@ var Interpreter = function(code, opt_initFunc) {
   this.initFunc_ = opt_initFunc;
   this.UNDEFINED = this.createPrimitive(undefined);
   this.ast = acorn.parse(code);
-  console.log(this.ast);
   var scope = this.createScope(this.ast, null);
   window.jsinterp = this;
   // window.jsinterp.global = scope;
@@ -963,8 +962,7 @@ Interpreter.prototype.createPrimitive = function(data) {
  * @return {!Object} New data object.
  */
 Interpreter.prototype.createObject = function(parent) {
-  console.log('createObject');
-  var obj = {
+      var obj = {
     isPrimitive: false,
     type: 'object',
     parent: parent,
