@@ -11,6 +11,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       });
   })
   .controller('MainController', function($scope) {
+    $scope.variables = {};
     $scope.message = 'Hello World';
     // $scope.visualize = function(code) {
     //   svg.append('circle')
@@ -25,7 +26,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     //     .style('stroke', 'black')
     //     .text('i');
     // };
-    $scope.codeText = "var x = 1;var fun1 = function(){var y = 2;var fun2 = function(){var z = 3;var fun3 = function(){var alpha = 4}();}();}();";//"var result = []; \nfunction fibonacci(n, output) { \n  var a = 1, b = 1, sum; \n  for (var i = 0; i < n; i++) { \n    output.push(a); \n    sum = a + b; \n    a = b; \n    b = sum; \n  }\n}\nfibonacci(16, result);\nalert(result.join(', '));";
+    $scope.codeText = "var x = 1;var fun1 = function(){var y = 2; var fun2 = function(){var z = 3;var fun3 = function(){var x = y}();}();}();";//"var result = []; \nfunction fibonacci(n, output) { \n  var a = 1, b = 1, sum; \n  for (var i = 0; i < n; i++) { \n    output.push(a); \n    sum = a + b; \n    a = b; \n    b = sum; \n  }\n}\nfibonacci(16, result);\nalert(result.join(', '));";
     $scope.remove = function(data) {
         data.nodes = [];
     };
@@ -78,11 +79,24 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       document.getElementById('runButton').disabled = disabled;
     };
 
+    var removeSelfReferences = function(scope){
+      for(var prop in scope){
+        if(typeof scope[prop] === "object"){
+          scope[prop] = "{}";
+        }
+      }
+    };
+
     var updateScopeViz = function(){
       var scopeCount = 0;
       var buildScopes = function(jsiScope, vizScope){
         scopeCount++;
         vizScope.variables = Object.keys(jsiScope.properties);
+        var temp = {};// = $scope.variables;
+        _.extend(temp , jsiScope.properties);
+        removeSelfReferences(temp);
+        // $scope.variables = temp;
+        console.log(temp);
         if(jsiScope.parentScope === null){
           vizScope.name = "Global";
           return vizScope;
