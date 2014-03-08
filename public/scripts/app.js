@@ -18,11 +18,40 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         redirectTo: '/'
       });
   })
-  .controller('MainController', function($scope, ScopeService) {
+  .controller('MainController', function($scope) {
+    $scope.lastColIndices;
+    $scope.codeText;
+
+    $scope.remove = function(data) {
+        data.nodes = [];
+    };
+
+    $scope.add = function(data) {
+        var post = data.nodes.length + 1;
+        var newName = data.name + '-' + post;
+        data.nodes.push({name: newName,nodes: []});
+    };
+
     $scope.parseButton = function() {
       var code = $scope.editor.getValue();
+      getlastColIndices(code);
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
+    };
+
+    var getlastColIndices = function(code) {
+      $scope.editor.setValue(code);
+      var lastRowIndex = $scope.editor.getSelection().getAllRanges()[0].end.row;
+      $scope.lastColIndices = [];
+      var lastColIndex = 0;
+
+      for (var i = 0; i <= lastRowIndex; i++){
+        $scope.editor.getSelection().moveCursorTo(i,0);
+        $scope.editor.getSelection().moveCursorLineEnd();
+        lastColIndex += $scope.editor.getSelection().getAllRanges()[0].end.column;
+        if (i>0) { lastColIndex += 1; }
+        $scope.lastColIndices[i] = lastColIndex;
+      }
     };
     $scope.stepButton = function() {
       var node, start, end, ok;
@@ -46,6 +75,36 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       ScopeService.updateScopeViz();
       $scope.treeArray = [ScopeService.masterTree];
     };
+
+    var selectCode = function(start, end) {
+      var startArray = getRowAndCol(start);
+      var endArray = getRowAndCol(end);
+      $scope.editor.getSelection().setSelectionRange({
+        start: {
+          row: startArray[0],
+          column: startArray[1]
+        },
+        end: {
+          row: endArray[0],
+          column: endArray[1]
+        }
+      });
+    };
+
+    var getRowAndCol = function(charIndex) {
+      if (charIndex <= $scope.lastColIndices[0]) {
+        return [0,charIndex];
+      }
+      var row = 1;
+      for (var i = 1; i < $scope.lastColIndices.length; i++) {
+        if (charIndex > $scope.lastColIndices[i]) {
+          row = i+1;
+        }
+      }
+      var col = charIndex - $scope.lastColIndices[row-1] - 1;
+      return [row, col];
+    };
+
     $scope.biggerStepButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
@@ -66,6 +125,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         }
       }
     }
+
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
         text = text ? text.toString() : '';
@@ -131,7 +191,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         }
       }
     };
-    $scope.tree = [{name: "Global", variables: [], child: [ {name: "child1", variables: [], child: []}, {name: "child2", variables: [], child: []} ]}];
   })
   .service("ScopeService", function(){
     this._globalScope = {name: "Global", variables: [], child: [] };
@@ -199,7 +258,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       link:link
     };
     function link(scope, element, attrs, ngModel) {
-      // var test = 'Hello World';
       scope.editor = ace.edit("editor");
       scope.editor.setTheme("ace/theme/monokai");
       scope.editor.getSession().setMode("ace/mode/javascript");
