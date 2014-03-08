@@ -83,30 +83,6 @@ alert(result.join(", ")); ';
           $scope.stepButton();
         }
       }
-    }    
-    $scope.biggerStepButton_old = function() {
-      if (myInterpreter.stateStack[0]) {
-        var node = myInterpreter.stateStack[0].node;
-        var start = node.start;
-        var end = node.end;
-        var completeStatementBoolean = isCompleteStatement(start, end);
-        if(completeStatementBoolean){
-          $scope.stepButton();
-        } else {
-          var allCodeString = $scope.editor.getValue();
-          while(completeStatementBoolean === false){
-            node = myInterpreter.stateStack[0].node;
-            start = node.start;
-            end = node.end;
-            completeStatementBoolean = isCompleteStatement(start, end);
-            if(completeStatementBoolean){
-              console.log('Complete statement found!');
-              console.log("  " + allCodeString.substring(start, end));
-            }
-            $scope.stepButton();
-          }
-        }
-      }
     }
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
