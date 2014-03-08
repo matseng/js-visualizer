@@ -6,6 +6,14 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         templateUrl: '../views/mainindex.html',
         controller: 'MainController'
       })
+      .when('/about', {
+        templateUrl: '../views/mainindex.html',
+        controller: 'MainController'        
+      })
+      .when('/contact', {
+        templateUrl: '../views/mainindex.html',
+        controller: 'MainController'
+      })
       .otherwise({
         redirectTo: '/'
       });
@@ -26,8 +34,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         start = 0;
         end = 0;
       }
-      console.log('start: ' + start + ', end: ' + end);
-      //createSelection(start, end);
+      selectCode(start, end);
       isCompleteStatement(start, end);
       try {
         ok = myInterpreter.step();
@@ -192,9 +199,13 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       link:link
     };
     function link(scope, element, attrs, ngModel) {
+      // var test = 'Hello World';
       scope.editor = ace.edit("editor");
       scope.editor.setTheme("ace/theme/monokai");
       scope.editor.getSession().setMode("ace/mode/javascript");
+      scope.editor.getSession().setTabSize(2);
       scope.editor.setValue(scope.codeText);
+      scope.editor.clearSelection();
     }
+
   });
