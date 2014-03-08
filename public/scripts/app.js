@@ -11,33 +11,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       });
   })
   .controller('MainController', function($scope, ScopeService) {
-    $scope.allValues = {};
-    $scope.message = 'Hello World';
-    $scope.codeText = '  \
-var result = [];  \n  \
-function fibonacci(n, output) {  \n  \
-  var a = 1, b = 1, sum;  \n  \
-  for (var i = 0; i < n; i++) {  \n  \
-    output.push(a);  \n  \
-    sum = a + b;  \n  \
-    a = b;  \n  \
-    b = sum;  \n  \
-  }  \n  \
-}  \n  \
-fibonacci(4, result);  \n  \
-alert(result.join(", ")); ';
-
-    $scope.remove = function(data) {
-        data.nodes = [];
-    };
-    $scope.add = function(data) {
-        var post = data.nodes.length + 1;
-        var newName = data.name + '-' + post;
-        data.nodes.push({name: newName,nodes: []});
-    };
     $scope.parseButton = function() {
       var code = $scope.editor.getValue();
-      // var code = $scope.codeText;
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
     };
@@ -61,8 +36,8 @@ alert(result.join(", ")); ';
           disable('disabled');
         }
       }
-      $scope.tree[0] = ScopeService.updateScopeViz();
-      $scope.treeArray = ScopeService.treeArray;
+      ScopeService.updateScopeViz();
+      $scope.treeArray = [ScopeService.masterTree];
     };
     $scope.biggerStepButton = function() {
       if (myInterpreter.stateStack[0]) {
@@ -101,7 +76,7 @@ alert(result.join(", ")); ';
     Highlights the text of current expression that is being evaluated:
     */
     function createSelection(start, end) {
-      var field = document.getElementById('code')
+      var field = document.getElementById('code');
       if (field.createTextRange) {
         var selRange = field.createTextRange();
         selRange.collapse(true);
@@ -117,9 +92,8 @@ alert(result.join(", ")); ';
       field.focus();
       //console.log(isNewLine(field, start, end));
     }  //END createSelection
-    
     /*
-    Returns true if the node type is a complete statement 
+    Returns true if the node type is a complete statement
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
     */
     var isCompleteStatement = function(start, end){
@@ -142,7 +116,7 @@ alert(result.join(", ")); ';
       }
       //console.log(str.substring(start, end));
       return true;
-    }  //END isCompleteStatement
+    };  //END isCompleteStatement
     var removeSelfReferences = function(scope){
       for(var prop in scope){
         if(typeof scope[prop] === "object"){
@@ -154,40 +128,62 @@ alert(result.join(", ")); ';
   })
   .service("ScopeService", function(){
     this._globalScope = {name: "Global", variables: [], child: [] };
-    this.treeArray = 
-    this.getScope = function(scope){
-      return globalScope;
+    this.masterTree = null;
+
+    var VizTree = function(jsiScope){
+      this._scope = jsiScope;
+      this.variables = Object.keys(jsiScope.properties);
+      this._children = [];
+      this._parent = null;
+      if(jsiScope.parentScope !== null){
+        this._parent = new VizTree(jsiScope.parentScope);
+        this._parent._children.push(this);
+      }
     };
+    VizTree.prototype.findNode = function(jsiNode){
+      if(jsiNode === this._scope){
+        return this;
+      }
+      for (var i = 0; i < this._children.length; i++) {
+        var foundNode = this._children[i].findNode(jsiNode);
+        if( foundNode !== null){
+          return foundNode;
+        }
+      }
+      return false;
+    };
+    VizTree.prototype.addChild = function(vizNode){
+      this._children.push(vizNode);
+      vizNode._parent = this;
+    };
+    VizTree.prototype.merge = function(vizNode){
+      var foundNode = this.findNode(vizNode._scope);
+      if( foundNode === false){
+        var parentNode = this.findNode(vizNode._parent._scope);
+        parentNode.addChild(vizNode);
+      }else if( vizNode._children[0] !== undefined ){
+        this.merge(vizNode._children[0]);
+      }
+    };
+
     this.updateScopeViz = function(){
       var tempTrees = [];
       var scopeCount = 0;
       var stateStack = window.myInterpreter.stateStack;
-      var buildScopeTree = function(jsiScope, vizScope){
-        scopeCount++;
-        vizScope.variables = Object.keys(jsiScope.properties);
-        if(jsiScope.parentScope === null){
-          vizScope.name = "Global";
-          return vizScope;
-        }else{
-          var child = vizScope;
-          // console.log('vizScope: ',vizScope);
-          vizScope = {name: scopeCount, variables: [], child: [child]};
-          return buildScopeTree(jsiScope.parentScope, vizScope);
-        }
-      };
       for (var i = 0; i < stateStack.length; i++) {
         if(stateStack[i].scope){
-          tempTrees.push(buildScopeTree(stateStack[i].scope, {name: "0", variables:[], child:[]} ));
+          var childNode = new VizTree(stateStack[i].scope);
+          while(childNode._parent !== null){
+            childNode = childNode._parent;
+          }
+          var rootNode = childNode;
+          tempTrees.push(rootNode);
         }
       }
-      this._globalScope = tempTrees[0];
-      // for (i = 1; i < tempTrees.length; i++) {
-      //   // console.log(tempTrees[i]);
-      //   if(tempTrees[i].child[0]){
-      //     this._globalScope.child.push(tempTrees[i].child[0]);
-      //   }
-      // }
-      this.treeArray = tempTrees;//[this._globalScope];
+      this.masterTree = tempTrees[0];
+      for (i = 1; i < tempTrees.length; i++) {
+        this.masterTree.merge(tempTrees[i]);
+      }
     };
   })
   .directive('aceEditor', function() {
@@ -202,5 +198,3 @@ alert(result.join(", ")); ';
       scope.editor.setValue(scope.codeText);
     }
   });
-
-

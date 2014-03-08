@@ -34,16 +34,16 @@ svg {
           <script type="text/ng-template"  id="tree_item_renderer.html">
               Scope Level: {{node.name}} <br/>
               Variables: <br/>
-              <div class="variable" ng-repeat="variable in node.variables">
+              <div class="variable" ng-repeat="variable in tree.variables">
                 {{variable}}
               </div>
               <div>
-                  <div class="scope" ng-repeat="node in node.child" ng-include="'tree_item_renderer.html'">
+                  <div class="scope" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
                   </div>
               </div>
           </script>
             <div>
-                <div class="scope" ng-repeat="node in treeArray" ng-include="'tree_item_renderer.html'"></div>
+                <div class="scope" ng-repeat="tree in treeArray" ng-include="'tree_item_renderer.html'"></div>
             </div>
         </div>
       </div>
