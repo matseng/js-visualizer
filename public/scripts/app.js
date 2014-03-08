@@ -13,7 +13,20 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
   .controller('MainController', function($scope, ScopeService) {
     $scope.allValues = {};
     $scope.message = 'Hello World';
-    $scope.codeText;
+    $scope.codeText = '  \
+var result = [];  \n  \
+function fibonacci(n, output) {  \n  \
+  var a = 1, b = 1, sum;  \n  \
+  for (var i = 0; i < n; i++) {  \n  \
+    output.push(a);  \n  \
+    sum = a + b;  \n  \
+    a = b;  \n  \
+    b = sum;  \n  \
+  }  \n  \
+}  \n  \
+fibonacci(4, result);  \n  \
+alert(result.join(", ")); ';
+
     $scope.remove = function(data) {
         data.nodes = [];
     };
@@ -38,6 +51,9 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         start = 0;
         end = 0;
       }
+      console.log('start: ' + start + ', end: ' + end);
+      //createSelection(start, end);
+      isCompleteStatement(start, end);
       try {
         ok = myInterpreter.step();
       } finally {
@@ -48,6 +64,50 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       $scope.tree[0] = ScopeService.updateScopeViz();
       $scope.treeArray = ScopeService.treeArray;
     };
+    $scope.biggerStepButton = function() {
+      if (myInterpreter.stateStack[0]) {
+        var node = myInterpreter.stateStack[0].node;
+        var start = node.start;
+        var end = node.end;
+        var completeStatementBoolean = false;  //initialized to false to enter while loop
+        var allCodeString = $scope.editor.getValue();
+        while(completeStatementBoolean === false){
+          node = myInterpreter.stateStack[0].node;
+          start = node.start;
+          end = node.end;
+          completeStatementBoolean = isCompleteStatement(start, end);
+          if(completeStatementBoolean){  //this if statement is for testing purposes
+            console.log('Complete statement found!');
+            console.log("  " + allCodeString.substring(start, end));
+          }
+          $scope.stepButton();
+        }
+      }
+    }    
+    $scope.biggerStepButton_old = function() {
+      if (myInterpreter.stateStack[0]) {
+        var node = myInterpreter.stateStack[0].node;
+        var start = node.start;
+        var end = node.end;
+        var completeStatementBoolean = isCompleteStatement(start, end);
+        if(completeStatementBoolean){
+          $scope.stepButton();
+        } else {
+          var allCodeString = $scope.editor.getValue();
+          while(completeStatementBoolean === false){
+            node = myInterpreter.stateStack[0].node;
+            start = node.start;
+            end = node.end;
+            completeStatementBoolean = isCompleteStatement(start, end);
+            if(completeStatementBoolean){
+              console.log('Complete statement found!');
+              console.log("  " + allCodeString.substring(start, end));
+            }
+            $scope.stepButton();
+          }
+        }
+      }
+    }
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
         text = text ? text.toString() : '';
@@ -58,8 +118,55 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
     var disable = function(disabled) {
       document.getElementById('stepButton').disabled = disabled;
+      document.getElementById('biggerStepButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
     };
+    /* 
+    Highlights the text of current expression that is being evaluated:
+    */
+    function createSelection(start, end) {
+      var field = document.getElementById('code')
+      if (field.createTextRange) {
+        var selRange = field.createTextRange();
+        selRange.collapse(true);
+        selRange.moveStart('character', start);
+        selRange.moveEnd('character', end);
+        selRange.select();
+      } else if (field.setSelectionRange) {
+        field.setSelectionRange(start, end);
+      } else if (field.selectionStart) {
+        field.selectionStart = start;
+        field.selectionEnd = end;
+      }
+      field.focus();
+      //console.log(isNewLine(field, start, end));
+    }  //END createSelection
+    
+    /*
+    Returns true if the node type is a complete statement 
+    (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
+    */
+    var isCompleteStatement = function(start, end){
+      var str = $scope.editor.getValue();
+      for(var i = end; i < str.length; i++){
+        var char = str[i];
+        if(!(/\s/.test(char)))  //character is NOT a white space
+          return false;
+        if(/\r|\n/.test(char)){  //new line found (good)
+          break;
+        }
+      }
+      for(var j = start - 1 ; j >= 0; j--){
+        var char = str[j];
+        if(!(/\s/.test(char)))
+          return false;  //return false bc character is NOT a white space
+        if(/\r|\n/.test(char)){
+          break;
+        }
+      }
+      //console.log(str.substring(start, end));
+      return true;
+    }  //END isCompleteStatement
     var removeSelfReferences = function(scope){
       for(var prop in scope){
         if(typeof scope[prop] === "object"){
