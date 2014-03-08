@@ -10,40 +10,24 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         redirectTo: '/'
       });
   })
-  .controller('MainController', function($scope) {
-    $scope.variables = {};
+  .controller('MainController', function($scope, ScopeService) {
+    $scope.allValues = {};
     $scope.message = 'Hello World';
-    // $scope.visualize = function(code) {
-    //   svg.append('circle')
-    //     .attr({'r': 20, 'class': 'newdatapoint'})
-    //     .attr('cx', 40)
-    //     .attr('cy', 20)
-    //     .attr('fill', 'green')
-    //     .selectAll('text')
-    //     .append('text')
-    //     .attr('x', 40)
-    //     .attr('y', 20)
-    //     .style('stroke', 'black')
-    //     .text('i');
-    // };
     $scope.codeText;
     $scope.remove = function(data) {
         data.nodes = [];
     };
-
     $scope.add = function(data) {
         var post = data.nodes.length + 1;
         var newName = data.name + '-' + post;
         data.nodes.push({name: newName,nodes: []});
     };
-
     $scope.parseButton = function() {
       var code = $scope.editor.getValue();
       // var code = $scope.codeText;
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
     };
-
     $scope.stepButton = function() {
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
@@ -54,7 +38,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         start = 0;
         end = 0;
       }
-      // createSelection(start, end);
       try {
         ok = myInterpreter.step();
       } finally {
@@ -62,9 +45,9 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
           disable('disabled');
         }
       }
-      updateScopeViz();
+      $scope.tree[0] = ScopeService.updateScopeViz();
+      $scope.treeArray = ScopeService.treeArray;
     };
-
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
         text = text ? text.toString() : '';
@@ -73,12 +56,10 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       interpreter.setProperty(scope, 'alert',
           interpreter.createNativeFunction(wrapper));
     };
-
     var disable = function(disabled) {
       document.getElementById('stepButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
     };
-
     var removeSelfReferences = function(scope){
       for(var prop in scope){
         if(typeof scope[prop] === "object"){
@@ -86,50 +67,46 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         }
       }
     };
-
-    var updateScopeViz = function(){
+    $scope.tree = [{name: "Global", variables: [], child: [ {name: "child1", variables: [], child: []}, {name: "child2", variables: [], child: []} ]}];
+  })
+  .service("ScopeService", function(){
+    this._globalScope = {name: "Global", variables: [], child: [] };
+    this.treeArray = 
+    this.getScope = function(scope){
+      return globalScope;
+    };
+    this.updateScopeViz = function(){
+      var tempTrees = [];
       var scopeCount = 0;
-      var buildScopes = function(jsiScope, vizScope){
+      var stateStack = window.myInterpreter.stateStack;
+      var buildScopeTree = function(jsiScope, vizScope){
         scopeCount++;
         vizScope.variables = Object.keys(jsiScope.properties);
-        var temp = {};// = $scope.variables;
-        _.extend(temp , jsiScope.properties);
-        removeSelfReferences(temp);
-        // $scope.variables = temp;
-        console.log(temp);
         if(jsiScope.parentScope === null){
           vizScope.name = "Global";
           return vizScope;
         }else{
           var child = vizScope;
+          // console.log('vizScope: ',vizScope);
           vizScope = {name: scopeCount, variables: [], child: [child]};
-          return buildScopes(jsiScope.parentScope, vizScope);
+          return buildScopeTree(jsiScope.parentScope, vizScope);
         }
       };
-      $scope.tree[0] = buildScopes(window.myInterpreter.getScope(), {name: "0", variables:[], child:[]});
-      // console.log(JSON.stringify($scope.tree));
+      for (var i = 0; i < stateStack.length; i++) {
+        if(stateStack[i].scope){
+          tempTrees.push(buildScopeTree(stateStack[i].scope, {name: "0", variables:[], child:[]} ));
+        }
+      }
+      this._globalScope = tempTrees[0];
+      // for (i = 1; i < tempTrees.length; i++) {
+      //   // console.log(tempTrees[i]);
+      //   if(tempTrees[i].child[0]){
+      //     this._globalScope.child.push(tempTrees[i].child[0]);
+      //   }
+      // }
+      this.treeArray = tempTrees;//[this._globalScope];
     };
-
-    // var createSelection = function(start, end) {
-    //   var field = $scope.codeText;
-    //   if (field.createTextRange) {
-    //     var selRange = field.createTextRange();
-    //     selRange.collapse(true);
-    //     selRange.moveStart('character', start);
-    //     selRange.moveEnd('character', end);
-    //     selRange.select();
-    //   } else if (field.setSelectionRange) {
-    //     field.setSelectionRange(start, end);
-    //   } else if (field.selectionStart) {
-    //     field.selectionStart = start;
-    //     field.selectionEnd = end;
-    //   }
-    //   field.focus();
-    // };
-
-    $scope.tree = [{name: "Global", variables: [], child: [{name: "child", variables: [], child: []}]}];
   })
-
   .directive('aceEditor', function() {
     return {
       require: '?ngModel',
@@ -140,18 +117,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       scope.editor.setTheme("ace/theme/monokai");
       scope.editor.getSession().setMode("ace/mode/javascript");
       scope.editor.setValue(scope.codeText);
-
-    //   ngModel.$render = function () {
-    //     editor.setValue(ngModel.$viewValue);
-    //   };
-
-    //   editor.on('change', function() {
-    //     scope.$apply = function() {
-    //       var content = editor.getValue();
-    //       ngModel.$setViewValue(content);
-    //       console.log(scope.codeText);
-    //     }
-    //   });      
     }
   });
 

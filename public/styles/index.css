@@ -150,11 +150,14 @@ body {
 }
 
 .scope {
+  display: inline-block;
   border: 1px solid;
   border-color: black;
-  padding: 3px;
-  margin: 3px;
+  padding: 5px;
+  margin: 5px;
+  border-radius: 10px;
   overflow: auto;
+  background-color: #689AD3;
 }
 
 .variable {
@@ -162,6 +165,8 @@ body {
   border-color: black;
   padding: 3px;
   margin: 3px;
+  border-radius: 10px;
   overflow: auto;
   display: inline-block;
+  background-color: #36D695;
 }
