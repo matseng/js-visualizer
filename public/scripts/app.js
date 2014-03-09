@@ -36,6 +36,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       $scope.lastColumnIndices = $scope.editor.getSelection().getLastColumnIndices();
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
+      $scope.editor.session.clearBreakpoints();
     };
 
     $scope.stepButton = function() {
@@ -57,6 +58,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       } finally {
         if (!ok) {
           disable('disabled');
+          $scope.editor.session.clearBreakpoints();
         }
       }
       ScopeService.updateScopeViz();
@@ -135,7 +137,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       document.getElementById('stepButton').disabled = disabled;
       document.getElementById('biggerStepButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
-      $scope.editor.session.clearBreakpoints();
     };
     /*
     Returns true if the node type is a complete statement 
