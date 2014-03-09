@@ -48,7 +48,9 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         start = 0;
         end = 0;
       }
-      selectCode(start, end);
+      $scope.editor.getSelection().setSelectionRangeIndices(start, end);
+      $scope.editor.session.clearBreakpoints();
+      $scope.editor.session.setBreakpoint([$scope.editor.getSelection().getRowColumnIndices(start).row]);
       isCompleteStatement(start, end);
       try {
         ok = myInterpreter.step();
@@ -61,23 +63,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       $scope.treeArray = [ScopeService.masterTree];
     };
 
-    var selectCode = function(start, end) {
-      var startRowCol = $scope.editor.getSelection().getRowColumnIndices(start);
-      var endRowCol = $scope.editor.getSelection().getRowColumnIndices(end);
-      $scope.editor.getSelection().setSelectionRange({
-       start: {
-          row: startRowCol.row,
-          column: startRowCol.column
-        },
-        end: {
-          row: endRowCol.row,
-          column: endRowCol.column
-        }
-      });
-      $scope.editor.session.clearBreakpoints();
-      $scope.editor.session.setBreakpoint([startRowCol.row]);
-    };
     $scope.biggerStepButton_old = function() {
+
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
@@ -117,7 +104,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
           $scope.stepButton();
         }
       }
-    }
+    };
+    
     var isOddNumberedCompletedStatement = function(programString, start, end){
       if (!myInterpreter.oddNumberedCompletedStatement){
         myInterpreter.oddNumberedCompletedStatement = {};
@@ -149,26 +137,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       document.getElementById('runButton').disabled = disabled;
       $scope.editor.session.clearBreakpoints();
     };
-    /* 
-    Highlights the text of current expression that is being evaluated:
-    */
-    // function createSelection(start, end) {
-    //   var field = document.getElementById('code');
-    //   if (field.createTextRange) {
-    //     var selRange = field.createTextRange();
-    //     selRange.collapse(true);
-    //     selRange.moveStart('character', start);
-    //     selRange.moveEnd('character', end);
-    //     selRange.select();
-    //   } else if (field.setSelectionRange) {
-    //     field.setSelectionRange(start, end);
-    //   } else if (field.selectionStart) {
-    //     field.selectionStart = start;
-    //     field.selectionEnd = end;
-    //   }
-    //   field.focus();
-    //   //console.log(isNewLine(field, start, end));
-    // }  //END createSelection
     /*
     Returns true if the node type is a complete statement 
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
@@ -196,6 +164,9 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     }  //END isCompleteStatement
 
     /*
+=======
+   /*
+>>>>>>> used setSelectionRangeIndices method
     Returns true if the node type is a complete statement
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
     */
