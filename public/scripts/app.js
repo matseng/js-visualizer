@@ -193,14 +193,38 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
   })
   .service("ScopeService", function(){
-    this._globalScope = {name: "Global", variables: [], child: [] };
     this.masterTree = null;
+
+    var stringifyArguments = function(args){
+      var result = [];
+      for(var i =0; i < args.length; i++){
+        result.push(i+' : '+args.properties[i]);
+      }
+      if(args.length > 0){
+        return '{' + result.join(', ') + ', length : ' + args.length +'}';
+      }else{
+        return '{' + result.join(', ') + 'length : ' + args.length +'}';
+      }
+    };
 
     var VizTree = function(jsiScope){
       this._scope = jsiScope;
-      this.variables = Object.keys(jsiScope.properties);
-      this._children = [];
       this._parent = null;
+      this._children = [];
+      this.variables = [];
+      for(var key in jsiScope.properties){
+        if(key === "arguments"){
+          this.variables.push([key, stringifyArguments(jsiScope.properties[key])]);
+        }else if(jsiScope.properties[key] !== undefined){
+          if(jsiScope.properties[key].type === "object"){
+            this.variables.push([key, "{}"]);
+          }else if(jsiScope.properties[key].type === "function"){
+            this.variables.push([key, "function(){}"]);
+          }else{
+            this.variables.push([key, jsiScope.properties[key].data]);
+          }
+        }
+      }
       if(jsiScope.parentScope !== null){
         this._parent = new VizTree(jsiScope.parentScope);
         this._parent._children.push(this);
