@@ -209,31 +209,35 @@ alert(result.join(", ")); ';
       });
     }
   })
+  /* 
+  adapted from https://gist.github.com/siongui/4969457
+  */
   .directive('draggable', ['$document', function($document){
     return {
       restrict: 'A',
       link: link
     };
     function link(scope, element, attrs){
-      debugger
-      var initialElementX, initialElementY, initialMouseX, initalMouseY;
-      element.css({position: 'absolute'});
+      var initialElementX, initialElementY, initialMouseX, initialMouseY;
 
       element.bind('mousedown', function($event){
-        initialElementX = this.prop('offsetLeft');
-        initialElementY = this.prop('offsetTop');
-        intialMouseX = $event.clientX;
-        intialMouseY = $event.clientY;
+        element.css({position: 'fixed'});
+        initialElementX = element.prop('offsetLeft');
+        initialElementY = element.prop('offsetTop');
+        initialMouseX = $event.clientX;
+        initialMouseY = $event.clientY;
         $document.bind('mousemove', myMouseMove);
         $document.bind('mouseup', myMouseUp);
+        return false;
       });
 
       function myMouseMove($event){
-        var deltaX = $event.clientX - intialMouseX;
-        var deltaY = $event.clientY - intialMouseY;
+        var deltaX = $event.clientX - initialMouseX;
+        var deltaY = $event.clientY - initialMouseY;
         var elementX = initialElementX + deltaX;
         var elementY = initialElementY + deltaY;
-        this.css({offsetLeft: elementX, offsetTop: elementY});
+        element.css({'left': elementX, 'top': elementY});
+        return false;
       }
 
       function myMouseUp($event){
