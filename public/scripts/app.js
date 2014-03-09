@@ -62,8 +62,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
 
     var selectCode = function(start, end) {
-      var startRowCol = getRowAndCol(start);
-      var endRowCol = getRowAndCol(end);
+      var startRowCol = $scope.editor.getSelection().getRowColumnIndices(start);
+      var endRowCol = $scope.editor.getSelection().getRowColumnIndices(end);
       $scope.editor.getSelection().setSelectionRange({
        start: {
           row: startRowCol.row,
@@ -77,21 +77,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       $scope.editor.session.clearBreakpoints();
       $scope.editor.session.setBreakpoint([startRowCol.row]);
     };
-
-    var getRowAndCol = function(charIndex) {
-      if (charIndex <= $scope.lastColumnIndices[0]) {
-        return {row: 0, column: charIndex};
-      }
-      var row = 1;
-      for (var i = 1; i < $scope.lastColumnIndices.length; i++) {
-        if (charIndex > $scope.lastColumnIndices[i]) {
-          row = i+1;
-        }
-      }
-      var col = charIndex - $scope.lastColumnIndices[row-1] - 1;
-      return {row: row, column: col};
-    };
-
     $scope.biggerStepButton_old = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
@@ -111,7 +96,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
           $scope.stepButton();
         }
       }
-    }
+    };
+    
     $scope.biggerStepButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
