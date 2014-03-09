@@ -18,7 +18,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         redirectTo: '/'
       });
   })
-  .controller('MainController', function($scope) {
+  .controller('MainController', function($scope, ScopeService) {
     $scope.lastColIndices;
     $scope.codeText;
 
@@ -117,10 +117,10 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
           start = node.start;
           end = node.end;
           completeStatementBoolean = isCompleteStatement(start, end);
-          if(completeStatementBoolean){  //this if statement is for testing purposes
-            console.log('Complete statement found!');
-            console.log("  " + allCodeString.substring(start, end));
-          }
+          // if(completeStatementBoolean){  //this if statement is for testing purposes
+          //   console.log('Complete statement found!');
+          //   console.log("  " + allCodeString.substring(start, end));
+          // }
           $scope.stepButton();
         }
       }
