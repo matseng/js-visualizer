@@ -36,7 +36,8 @@ svg {
               Scope Level: {{node.name}} <br/>
               Variables: <br/>
               <div class="variable" ng-repeat="variable in tree.variables">
-                {{variable}}
+                <div class='varName'>{{variable[0]}}</div>
+                <div class='varVal'>{{variable[1]}}</div>
               </div>
               <div>
                   <div class="scope" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
