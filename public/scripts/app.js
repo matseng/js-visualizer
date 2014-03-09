@@ -77,6 +77,12 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       }
     };
     $scope.biggerStepButton = function() {
+      // TODO: To create stepIn, save current completeStatement 
+        // iterate thru program via step until a a new completeStatement is encountered
+      // To create stepOver, save ' '
+        // iterate thru prgm via step past next expressionStatement until a new completeStatement is encountered
+      
+
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
