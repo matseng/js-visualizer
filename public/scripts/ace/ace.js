@@ -3774,6 +3774,9 @@ var Selection = function(session) {
     this.moveCursorToPosition = function(position) {
         this.moveCursorTo(position.row, position.column);
     };
+    this.getLastColumnIndex = function(row){
+        return this.session.getDocumentLastRowColumnPosition(row,0);
+    };
     this.moveCursorTo = function(row, column, keepDesiredColumn) {
         var fold = this.session.getFoldAt(row, column, 1);
         if (fold) {
