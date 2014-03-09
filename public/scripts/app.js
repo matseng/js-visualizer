@@ -33,7 +33,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
 
     $scope.parseButton = function() {
       var code = $scope.editor.getValue();
-      $scope.lastColumnIndices = $scope.editor.getSelection().getLastColumnIndices();
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
       $scope.editor.session.clearBreakpoints();
