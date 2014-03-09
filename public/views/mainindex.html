@@ -1,52 +1,47 @@
-<style type="text/css">
-.codeinput {
-  border: 5px solid black;
-}
-svg {
-  border: 5px solid black;
-}
-#editor {
-  height: 475px; 
-  width: 450px
-}
-.ace_gutter-cell.ace_breakpoint{ 
-    border-radius: 20px 0px 0px 20px; 
-    box-shadow: 0px 0px 1px 1px red inset; 
-} 
-</style>
-
 <div class="container index" ng-controller='MainController'>
   <br><br><br><br><br>
   <div class='container'>
-    <div class='row'>
-      <div id='codePane' class='col-md-5'>
+    <div class='content'>
+      <div class='row'>
+        <div id='codePane' class='col-md-5'>
 
-        Enter your JS code here:
-        <div id='editor' ace-editor ng-model='codeText'></div>
-
-        <button ng-click="parseButton()">Parse</button>
-        <button ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
-        <button ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
-        <button ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
-      </div>
-      <div id='visPane' class='col-md-7'>
-        <br>
-        <div class='visArea'>
-          <script type="text/ng-template"  id="tree_item_renderer.html">
-              Scope Level: {{node.name}} <br/>
-              Variables: <br/>
-              <div class="variable" ng-repeat="variable in tree.variables">
-                <div class='varName'>{{variable[0]}}</div>
-                <div class='varVal'>{{variable[1]}}</div>
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Enter Code Here</h3>
+            </div>
+            <div class="panel-body editor">
+              <div id='editor' ace-editor ng-model='codeText'></div>
+              <div class = "btn-group">
+                <button class="btn" ng-click="parseButton()">Parse</button>
+                <button class="btn" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
+                <button class="btn" ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
+                <button class="btn" ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
               </div>
+            </div>
+          </div>
+        </div>
+        <div id='visPane' class='col-md-7'>
+            <script type="text/ng-template"  id="tree_item_renderer.html">
+                <div class="panel-heading">
+                      <h3 class="panel-title">Scope</h3>
+                </div>
+                <div class="panel-body">
+                  Variables:
+                  <div class="variable" ng-repeat="variable in tree.variables">
+                    <div class='btn'>{{variable[0]}}</div>
+                    <div class='btn'>{{variable[1]}}</div>
+                  </div>
+                </div>
+                <div>
+                    <div class="panel panel-info" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
+                    </div>
+                </div>
+            </script>
               <div>
-                  <div class="scope" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
+                  <div class="panel panel-success" ng-repeat="tree in treeArray" ng-include="'tree_item_renderer.html'">
                   </div>
               </div>
-          </script>
-            <div>
-                <div class="scope" ng-repeat="tree in treeArray" ng-include="'tree_item_renderer.html'"></div>
-            </div>
+          </div>
         </div>
       </div>
     </div>
