@@ -55,11 +55,14 @@ alert(result.join(", ")); ';
       var numRows = $scope.editor.getSession().getLength();
       $scope.lastColIndices = [];
       var lastColIndex = 0;
+      var selection = $scope.editor.getSelection();
 
       for (var i = 0; i < numRows; i++){
-        $scope.editor.getSelection().moveCursorTo(i,0);
-        $scope.editor.getSelection().moveCursorLineEnd();
-        lastColIndex += $scope.editor.getSelection().getCursor().column;
+        console.log(selection.getLastColumnIndex(i).column);
+        selection.moveCursorTo(i,0);
+        // console.log($scope.editor.getSelection().getLineRange());
+        selection.moveCursorLineEnd();
+        lastColIndex += selection.getCursor().column;
         if (i>0) { lastColIndex += 1; }
         $scope.lastColIndices[i] = lastColIndex;
       }
