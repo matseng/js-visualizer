@@ -50,7 +50,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       }
       $scope.editor.getSelection().setSelectionRangeIndices(start, end);
       $scope.editor.session.clearBreakpoints();
-      $scope.editor.session.setBreakpoint([$scope.editor.getSelection().getRowColumnIndices(start).row]);
+      var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
+      $scope.editor.session.setBreakpoint([startRow]);
       isCompleteStatement(start, end);
       try {
         ok = myInterpreter.step();
