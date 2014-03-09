@@ -19,21 +19,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       });
   })
   .controller('MainController', function($scope, ScopeService) {
-    $scope.lastColIndices;
-//    $scope.codeText;
-    $scope.codeText = '  \
-var result = [];  \n  \
-function fibonacci(n, output) {  \n  \
-  var a = 1, b = 1, sum;  \n  \
-  for (var i = 0; i < n; i++) {  \n  \
-    output.push(a);  \n  \
-    sum = a + b;  \n  \
-    a = b;  \n  \
-    b = sum;  \n  \
-  }  \n  \
-}  \n  \
-fibonacci(4, result);  \n  \
-alert(result.join(", ")); ';
+    $scope.codeText;
+
     $scope.remove = function(data) {
         data.nodes = [];
     };
@@ -46,27 +33,11 @@ alert(result.join(", ")); ';
 
     $scope.parseButton = function() {
       var code = $scope.editor.getValue();
-      getlastColIndices(code);
+      $scope.lastColumnIndices = $scope.editor.getSelection().getLastColumnIndices();
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
     };
 
-    var getlastColIndices = function(code) {
-      var numRows = $scope.editor.getSession().getLength();
-      $scope.lastColIndices = [];
-      var lastColIndex = 0;
-      var selection = $scope.editor.getSelection();
-
-      for (var i = 0; i < numRows; i++){
-        console.log(selection.getLastColumnIndex(i).column);
-        selection.moveCursorTo(i,0);
-        // console.log($scope.editor.getSelection().getLineRange());
-        selection.moveCursorLineEnd();
-        lastColIndex += selection.getCursor().column;
-        if (i>0) { lastColIndex += 1; }
-        $scope.lastColIndices[i] = lastColIndex;
-      }
-    };
     $scope.stepButton = function() {
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
@@ -108,16 +79,16 @@ alert(result.join(", ")); ';
     };
 
     var getRowAndCol = function(charIndex) {
-      if (charIndex <= $scope.lastColIndices[0]) {
+      if (charIndex <= $scope.lastColumnIndices[0]) {
         return {row: 0, column: charIndex};
       }
       var row = 1;
-      for (var i = 1; i < $scope.lastColIndices.length; i++) {
-        if (charIndex > $scope.lastColIndices[i]) {
+      for (var i = 1; i < $scope.lastColumnIndices.length; i++) {
+        if (charIndex > $scope.lastColumnIndices[i]) {
           row = i+1;
         }
       }
-      var col = charIndex - $scope.lastColIndices[row-1] - 1;
+      var col = charIndex - $scope.lastColumnIndices[row-1] - 1;
       return {row: row, column: col};
     };
 
@@ -368,7 +339,6 @@ alert(result.join(", ")); ';
       scope.editor.setValue(scope.codeText);
       scope.editor.clearSelection();
       scope.editor.renderer.setShowGutter(true);
-      // scope.editor.getSession().setBreakpoint([0]);
     }
 
   });
