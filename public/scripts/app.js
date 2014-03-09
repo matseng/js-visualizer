@@ -201,6 +201,46 @@ alert(result.join(", ")); ';
       scope.editor.getSession().setMode("ace/mode/javascript");
       scope.editor.setValue(scope.codeText);
     }
-  });
+  })
+  .directive('enter', function(){
+    return function(scope, element, attrs){
+      element.bind('mousedown', function(){
+        console.log(scope, element, attrs);
+      });
+    }
+  })
+  .directive('draggable', ['$document', function($document){
+    return {
+      restrict: 'A',
+      link: link
+    };
+    function link(scope, element, attrs){
+      debugger
+      var initialElementX, initialElementY, initialMouseX, initalMouseY;
+      element.css({position: 'absolute'});
+
+      element.bind('mousedown', function($event){
+        initialElementX = this.prop('offsetLeft');
+        initialElementY = this.prop('offsetTop');
+        intialMouseX = $event.clientX;
+        intialMouseY = $event.clientY;
+        $document.bind('mousemove', myMouseMove);
+        $document.bind('mouseup', myMouseUp);
+      });
+
+      function myMouseMove($event){
+        var deltaX = $event.clientX - intialMouseX;
+        var deltaY = $event.clientY - intialMouseY;
+        var elementX = initialElementX + deltaX;
+        var elementY = initialElementY + deltaY;
+        this.css({offsetLeft: elementX, offsetTop: elementY});
+      }
+
+      function myMouseUp($event){
+        $document.unbind('mousemove', myMouseMove);
+        $document.unbind('mouseup', myMouseUp);
+      }
+    }
+  }]);
 
 
