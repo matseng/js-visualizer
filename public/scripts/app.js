@@ -20,8 +20,20 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
   })
   .controller('MainController', function($scope, ScopeService) {
     $scope.lastColIndices;
-    $scope.codeText;
-
+//    $scope.codeText;
+    $scope.codeText = '  \
+var result = [];  \n  \
+function fibonacci(n, output) {  \n  \
+  var a = 1, b = 1, sum;  \n  \
+  for (var i = 0; i < n; i++) {  \n  \
+    output.push(a);  \n  \
+    sum = a + b;  \n  \
+    a = b;  \n  \
+    b = sum;  \n  \
+  }  \n  \
+}  \n  \
+fibonacci(4, result);  \n  \
+alert(result.join(", ")); ';
     $scope.remove = function(data) {
         data.nodes = [];
     };
@@ -108,7 +120,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       return [row, col];
     };
 
-    $scope.biggerStepButton = function() {
+    $scope.biggerStepButton_old = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
@@ -128,6 +140,42 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         }
       }
     }
+    $scope.biggerStepButton = function() {
+      if (myInterpreter.stateStack[0]) {
+        var node = myInterpreter.stateStack[0].node;
+        var start = node.start;
+        var end = node.end;
+        var oddNumComStaObjBoolean = false;  //initialized to false to enter while loop
+        var programString = $scope.editor.getValue();
+        while(oddNumComStaObjBoolean === false){
+          node = myInterpreter.stateStack[0].node;
+          start = node.start;
+          end = node.end;
+          oddNumComStaObjBoolean = isOddNumberedCompletedStatement(programString, start, end);
+          if(oddNumComStaObjBoolean){  //this if statement is for testing purposes
+            console.log('Complete statement found!');
+            console.log("  " + programString.substring(start, end));
+          }
+          $scope.stepButton();
+        }
+      }
+    }
+    var isOddNumberedCompletedStatement = function(programString, start, end){
+      if (!myInterpreter.oddNumberedCompletedStatement){
+        myInterpreter.oddNumberedCompletedStatement = {};
+      }
+      var oddNumComStaObj = myInterpreter.oddNumberedCompletedStatement;
+      var completeStatement = isCompleteStatement(programString, start, end);
+      if(completeStatement === false)
+        return false;
+      if(oddNumComStaObj[start, end] === undefined){
+        oddNumComStaObj[start, end] = true;
+        return true;
+      } else {
+        oddNumComStaObj[start, end] = !(oddNumComStaObj[start, end]);
+        return oddNumComStaObj[start, end];
+      }
+    };
 
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
@@ -164,10 +212,36 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     //   //console.log(isNewLine(field, start, end));
     // }  //END createSelection
     /*
+    Returns true if the node type is a complete statement 
+    (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
+    */
+    var isCompleteStatement = function(programString, start, end){
+      // var str = $scope.editor.getValue();
+      for(var i = end; i < programString.length; i++){
+        var char = programString[i];
+        if(!(/\s/.test(char)))  //character is NOT a white space
+          return false;
+        if(/\r|\n/.test(char)){  //new line found (good)
+          break;
+        }
+      }
+      for(var j = start - 1 ; j >= 0; j--){
+        var char = programString[j];
+        if(!(/\s/.test(char)))
+          return false;  //return false bc character is NOT a white space
+        if(/\r|\n/.test(char)){
+          break;
+        }
+      }
+      //console.log(str.substring(start, end));
+      return true;
+    }  //END isCompleteStatement
+
+    /*
     Returns true if the node type is a complete statement
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
     */
-    var isCompleteStatement = function(start, end){
+    var isCompleteStatement_old = function(start, end){
       var str = $scope.editor.getValue();
       for(var i = end; i < str.length; i++){
         var char = str[i];
