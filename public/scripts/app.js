@@ -153,8 +153,8 @@ alert(result.join(", ")); ';
           end = node.end;
           oddNumComStaObjBoolean = isOddNumberedCompletedStatement(programString, start, end);
           if(oddNumComStaObjBoolean){  //this if statement is for testing purposes
-            console.log('Complete statement found!');
-            console.log("  " + programString.substring(start, end));
+            // console.log('Complete statement found!');
+            // console.log("  " + programString.substring(start, end));
           }
           $scope.stepButton();
         }
@@ -285,6 +285,7 @@ alert(result.join(", ")); ';
       }
     };
 
+    var globalVarKeys = {'Infinity' : true, 'NaN' : true, 'undefined': true}
     var VizTree = function(jsiScope){
       this._scope = jsiScope;
       this._parent = null;
@@ -293,15 +294,22 @@ alert(result.join(", ")); ';
       for(var key in jsiScope.properties){
         if(key === "arguments"){
           this.variables.push([key, stringifyArguments(jsiScope.properties[key])]);
+        }else if(globalVarKeys[key] !== undefined){
+          this.variables.push([key, key]);
         }else if(jsiScope.properties[key] !== undefined){
           if(jsiScope.properties[key].type === "object"){
-            this.variables.push([key, "{}"]);
+              this.variables.push([key, "{}"]);
           }else if(jsiScope.properties[key].type === "function"){
             this.variables.push([key, "function(){}"]);
-          }else{
-            this.variables.push([key, jsiScope.properties[key].data]);
+          }else {
+            if(jsiScope.properties[key].data === Infinity){
+              this.variables.push([key, "Infinity"]);
+            }else{
+              this.variables.push([key, jsiScope.properties[key].data]);
+            }
           }
         }
+
       }
       if(jsiScope.parentScope !== null){
         this._parent = new VizTree(jsiScope.parentScope);
