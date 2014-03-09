@@ -89,6 +89,9 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
           column: endArray[1]
         }
       });
+      $scope.editor.session.clearBreakpoints();
+      $scope.editor.session.setBreakpoint([startArray[0]]);
+
     };
 
     var getRowAndCol = function(charIndex) {
@@ -138,27 +141,28 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       document.getElementById('stepButton').disabled = disabled;
       document.getElementById('biggerStepButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
+      $scope.editor.session.clearBreakpoints();
     };
     /* 
     Highlights the text of current expression that is being evaluated:
     */
-    function createSelection(start, end) {
-      var field = document.getElementById('code');
-      if (field.createTextRange) {
-        var selRange = field.createTextRange();
-        selRange.collapse(true);
-        selRange.moveStart('character', start);
-        selRange.moveEnd('character', end);
-        selRange.select();
-      } else if (field.setSelectionRange) {
-        field.setSelectionRange(start, end);
-      } else if (field.selectionStart) {
-        field.selectionStart = start;
-        field.selectionEnd = end;
-      }
-      field.focus();
-      //console.log(isNewLine(field, start, end));
-    }  //END createSelection
+    // function createSelection(start, end) {
+    //   var field = document.getElementById('code');
+    //   if (field.createTextRange) {
+    //     var selRange = field.createTextRange();
+    //     selRange.collapse(true);
+    //     selRange.moveStart('character', start);
+    //     selRange.moveEnd('character', end);
+    //     selRange.select();
+    //   } else if (field.setSelectionRange) {
+    //     field.setSelectionRange(start, end);
+    //   } else if (field.selectionStart) {
+    //     field.selectionStart = start;
+    //     field.selectionEnd = end;
+    //   }
+    //   field.focus();
+    //   //console.log(isNewLine(field, start, end));
+    // }  //END createSelection
     /*
     Returns true if the node type is a complete statement
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
@@ -264,6 +268,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       scope.editor.getSession().setTabSize(2);
       scope.editor.setValue(scope.codeText);
       scope.editor.clearSelection();
+      scope.editor.renderer.setShowGutter(true);
+      // scope.editor.getSession().setBreakpoint([0]);
     }
 
   });
