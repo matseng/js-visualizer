@@ -34,7 +34,7 @@ svg {
           <script type="text/ng-template"  id="tree_item_renderer.html">
               Scope Level: {{node.name}} <br/>
               Variables: <br/>
-              <div draggable class="variable" ng-repeat="variable in node.variables">
+              <div class="variable" ng-repeat="variable in node.variables">
                 {{variable}}
               </div>
               <div>

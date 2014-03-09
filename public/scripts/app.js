@@ -221,7 +221,7 @@ alert(result.join(", ")); ';
       var initialElementX, initialElementY, initialMouseX, initialMouseY;
 
       element.bind('mousedown', function($event){
-        element.css({position: 'fixed'});
+        element.css({position: 'absolute'});
         initialElementX = element.prop('offsetLeft');
         initialElementY = element.prop('offsetTop');
         initialMouseX = $event.clientX;
