@@ -3777,6 +3777,19 @@ var Selection = function(session) {
     this.getLastColumnIndex = function(row){
         return this.session.getDocumentLastRowColumnPosition(row,0);
     };
+    this.getLastColumnIndices = function(){
+        var rows = this.session.getLength();
+        // console.log(rows);
+        var lastColumnIndices = [];
+        var lastColIndex = 0;
+        for (var i = 0; i < rows; i++){
+            lastColIndex += this.getLastColumnIndex(i).column;
+            // console.log(lastColIndex);
+            if (i>0) { lastColIndex += 1; }
+            lastColumnIndices[i] = lastColIndex;
+        }
+        return lastColumnIndices;
+    };
     this.moveCursorTo = function(row, column, keepDesiredColumn) {
         var fold = this.session.getFoldAt(row, column, 1);
         if (fold) {
