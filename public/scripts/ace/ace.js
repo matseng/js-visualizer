@@ -3779,16 +3779,28 @@ var Selection = function(session) {
     };
     this.getLastColumnIndices = function(){
         var rows = this.session.getLength();
-        // console.log(rows);
         var lastColumnIndices = [];
         var lastColIndex = 0;
         for (var i = 0; i < rows; i++){
             lastColIndex += this.getLastColumnIndex(i).column;
-            // console.log(lastColIndex);
             if (i>0) { lastColIndex += 1; }
             lastColumnIndices[i] = lastColIndex;
         }
         return lastColumnIndices;
+    };
+    this.getRowColumnIndices = function(characterIndex) {
+        var lastColumnIndices = this.getLastColumnIndices();
+        if (characterIndex <= lastColumnIndices[0]) {
+            return {row: 0, column: characterIndex};
+        }
+        var row = 1;
+        for (var i = 1; i < lastColumnIndices.length; i++) {
+            if (characterIndex > lastColumnIndices[i]) {
+                row = i+1;
+            }
+        }
+        var column = characterIndex - lastColumnIndices[row-1] - 1;
+        return {row: row, column: column};
     };
     this.moveCursorTo = function(row, column, keepDesiredColumn) {
         var fold = this.session.getFoldAt(row, column, 1);
