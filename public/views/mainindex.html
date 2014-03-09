@@ -9,6 +9,10 @@ svg {
   height: 475px; 
   width: 450px
 }
+.ace_gutter-cell.ace_breakpoint{ 
+    border-radius: 20px 0px 0px 20px; 
+    box-shadow: 0px 0px 1px 1px red inset; 
+} 
 </style>
 
 <div class="container index" ng-controller='MainController'>
@@ -19,13 +23,11 @@ svg {
 
         Enter your JS code here:
         <div id='editor' ace-editor ng-model='codeText'></div>
-        <!-- <div id="editor" style="height: 475px; width: 450px"></div>     -->
-        <!-- <textarea rows="23" cols="70" class='codeinput' type="text" ng-model="codeText"></textarea> -->
 
-  <button ng-click="parseButton()">Parse</button>
-  <button ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
-  <button ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
-        <button class='codeinputbutton' ng-click="visualize(codeText)">Visualize!</button><br><br>
+        <button ng-click="parseButton()">Parse</button>
+        <button ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
+        <button ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
+        <button ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
       </div>
       <div id='visPane' class='col-md-7'>
         <br>
@@ -33,31 +35,21 @@ svg {
           <script type="text/ng-template"  id="tree_item_renderer.html">
               Scope Level: {{node.name}} <br/>
               Variables: <br/>
-              <div class="variable" ng-repeat="variable in node.variables">
+              <div class="variable" ng-repeat="variable in tree.variables">
                 {{variable}}
               </div>
               <div>
-                  <div class="scope" ng-repeat="node in node.child" ng-include="'tree_item_renderer.html'">
+                  <div class="scope" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
                   </div>
               </div>
           </script>
             <div>
-                <div class="scope" ng-repeat="node in treeArray" ng-include="'tree_item_renderer.html'"></div>
+                <div class="scope" ng-repeat="tree in treeArray" ng-include="'tree_item_renderer.html'"></div>
             </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-
-<script type="text/javascript">
-
-// var margin = {top: 20, right: 20, bottom: 30, left: 50},
-//     width = 515 - margin.left - margin.right,
-//     height = 512 - margin.top - margin.bottom;
-
-</script>
-
-<link rel='stylesheet' href="../styles/bootstrapDist/css/bootstrap.min.css" >
 
 
