@@ -52,15 +52,14 @@ alert(result.join(", ")); ';
     };
 
     var getlastColIndices = function(code) {
-      $scope.editor.setValue(code);
-      var lastRowIndex = $scope.editor.getSelection().getAllRanges()[0].end.row;
+      var numRows = $scope.editor.getSession().getLength();
       $scope.lastColIndices = [];
       var lastColIndex = 0;
 
-      for (var i = 0; i <= lastRowIndex; i++){
+      for (var i = 0; i < numRows; i++){
         $scope.editor.getSelection().moveCursorTo(i,0);
         $scope.editor.getSelection().moveCursorLineEnd();
-        lastColIndex += $scope.editor.getSelection().getAllRanges()[0].end.column;
+        lastColIndex += $scope.editor.getSelection().getCursor().column;
         if (i>0) { lastColIndex += 1; }
         $scope.lastColIndices[i] = lastColIndex;
       }
@@ -89,26 +88,25 @@ alert(result.join(", ")); ';
     };
 
     var selectCode = function(start, end) {
-      var startArray = getRowAndCol(start);
-      var endArray = getRowAndCol(end);
+      var startRowCol = getRowAndCol(start);
+      var endRowCol = getRowAndCol(end);
       $scope.editor.getSelection().setSelectionRange({
-        start: {
-          row: startArray[0],
-          column: startArray[1]
+       start: {
+          row: startRowCol.row,
+          column: startRowCol.column
         },
         end: {
-          row: endArray[0],
-          column: endArray[1]
+          row: endRowCol.row,
+          column: endRowCol.column
         }
       });
       $scope.editor.session.clearBreakpoints();
-      $scope.editor.session.setBreakpoint([startArray[0]]);
-
+      $scope.editor.session.setBreakpoint([startRowCol.row]);
     };
 
     var getRowAndCol = function(charIndex) {
       if (charIndex <= $scope.lastColIndices[0]) {
-        return [0,charIndex];
+        return {row: 0, column: charIndex};
       }
       var row = 1;
       for (var i = 1; i < $scope.lastColIndices.length; i++) {
@@ -117,7 +115,7 @@ alert(result.join(", ")); ';
         }
       }
       var col = charIndex - $scope.lastColIndices[row-1] - 1;
-      return [row, col];
+      return {row: row, column: col};
     };
 
     $scope.biggerStepButton_old = function() {
