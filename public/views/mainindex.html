@@ -1,25 +1,14 @@
-<div class="container index" ng-controller='MainController'>
-  <br><br><br><br><br>
-  <div class='container'>
-    <div class='content'>
-      <div class='row'>
+<div class="container index heightfix" ng-controller='MainController'>
+      <div class='row heightfix'>
         <div id='codePane' class='col-md-5'>
-
-          <div class="panel panel-primary">
-            <div class="panel-heading">
-              <h3 class="panel-title">Enter Code Here</h3>
-            </div>
-            <div class="panel-body editor">
-              <div id='editor' ace-editor ng-model='codeText'></div>
-              <div class = "btn-group">
-                <button class="btn" ng-click="parseButton()">Parse</button>
-                <button class="btn" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
-                <button class="btn" ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
-                <button class="btn" ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
-              </div>
+            <div id='editor' ace-editor ng-model='codeText'></div>
+            <div class = "btn-group">
+              <button class="btn" ng-click="parseButton()">Parse</button>
+              <button class="btn" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
+              <button class="btn" ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
+              <button class="btn" ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
             </div>
           </div>
-        </div>
         <div id='visPane' class='col-md-7'>
             <script type="text/ng-template"  id="tree_item_renderer.html">
                 <div class="panel-heading">
@@ -44,8 +33,5 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
 
