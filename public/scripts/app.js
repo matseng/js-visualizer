@@ -8,7 +8,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       })
       .when('/about', {
         templateUrl: '../views/mainindex.html',
-        controller: 'MainController'        
+        controller: 'MainController'
       })
       .when('/contact', {
         templateUrl: '../views/mainindex.html',
@@ -19,7 +19,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       });
   })
   .controller('MainController', function($scope, ScopeService) {
-    $scope.codeText;
+    $scope.codeText = '';
 
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
@@ -77,45 +77,27 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       }
     };
     $scope.biggerStepButton = function() {
-      // TODO: To create stepIn, save current completeStatement 
-        // iterate thru program via step until a a new completeStatement is encountered
-      // To create stepOver, save ' '
-        // iterate thru prgm via step past next expressionStatement until a new completeStatement is encountered
-      
-
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
         var end = node.end;
-        var oddNumComStaObjBoolean = false;  //initialized to false to enter while loop
         var programString = $scope.editor.getValue();
-        while(oddNumComStaObjBoolean === false){
+        var currStatement = programString.slice(start,end);
+        var currCompleteStatement = isCompleteStatement(programString, start, end);
+        $scope.stepButton();
+        while($scope.prevStatement === currStatement || currCompleteStatement === false){
           node = myInterpreter.stateStack[0].node;
           start = node.start;
           end = node.end;
-          oddNumComStaObjBoolean = isOddNumberedCompletedStatement(programString, start, end);
-          if(oddNumComStaObjBoolean){  //this if statement is for testing purposes
-            // console.log('Complete statement found!');
-            // console.log("  " + programString.substring(start, end));
+          if (isCompleteStatement(programString, start, end)) {
+            if (currCompleteStatement === true) {
+              $scope.prevStatement = currStatement;
+            }
+            currCompleteStatement = true;
+            currStatement = programString.slice(start,end);
           }
           $scope.stepButton();
         }
-      }
-    };
-    var isOddNumberedCompletedStatement = function(programString, start, end){
-      if (!myInterpreter.oddNumberedCompletedStatement){
-        myInterpreter.oddNumberedCompletedStatement = {};
-      }
-      var oddNumComStaObj = myInterpreter.oddNumberedCompletedStatement;
-      var completeStatement = isCompleteStatement(programString, start, end);
-      if(completeStatement === false)
-        return false;
-      if(oddNumComStaObj[start, end] === undefined){
-        oddNumComStaObj[start, end] = true;
-        return true;
-      } else {
-        oddNumComStaObj[start, end] = !(oddNumComStaObj[start, end]);
-        return oddNumComStaObj[start, end];
       }
     };
     var initAlert = function(interpreter, scope) {
@@ -132,53 +114,25 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       document.getElementById('runButton').disabled = disabled;
     };
     /*
-    Returns true if the node type is a complete statement 
+    Returns true if the node type is a complete statement
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
     */
     var isCompleteStatement = function(programString, start, end){
       // var str = $scope.editor.getValue();
+      var currChar;
       for(var i = end; i < programString.length; i++){
-        var char = programString[i];
-        if(!(/\s/.test(char)))  //character is NOT a white space
+        currChar = programString[i];
+        if(!(/\s/.test(currChar)))  //currCharacter is NOT a white space
           return false;
-        if(/\r|\n/.test(char)){  //new line found (good)
+        if(/\r|\n/.test(currChar)){  //new line found (good)
           break;
         }
       }
       for(var j = start - 1 ; j >= 0; j--){
-        var char = programString[j];
-        if(!(/\s/.test(char)))
+        currChar = programString[j];
+        if(!(/\s/.test(currChar)))
           return false;  //return false bc character is NOT a white space
-        if(/\r|\n/.test(char)){
-          break;
-        }
-      }
-      //console.log(str.substring(start, end));
-      return true;
-    }  //END isCompleteStatement
-
-    /*
-=======
-   /*
->>>>>>> used setSelectionRangeIndices method
-    Returns true if the node type is a complete statement
-    (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
-    */
-    var isCompleteStatement_old = function(start, end){
-      var str = $scope.editor.getValue();
-      for(var i = end; i < str.length; i++){
-        var char = str[i];
-        if(!(/\s/.test(char)))  //character is NOT a white space
-          return false;
-        if(/\r|\n/.test(char)){  //new line found (good)
-          break;
-        }
-      }
-      for(var j = start - 1 ; j >= 0; j--){
-        var char = str[j];
-        if(!(/\s/.test(char)))
-          return false;  //return false bc character is NOT a white space
-        if(/\r|\n/.test(char)){
+        if(/\r|\n/.test(currChar)){
           break;
         }
       }
