@@ -60,22 +60,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       ScopeService.updateScopeViz();
       $scope.scopeTree = ScopeService.masterTree;
     };
-    $scope.biggerStepButton_old = function() {
-      if (myInterpreter.stateStack[0]) {
-        var node = myInterpreter.stateStack[0].node;
-        var start = node.start;
-        var end = node.end;
-        var completeStatementBoolean = false;  //initialized to false to enter while loop
-        var allCodeString = $scope.editor.getValue();
-        while(completeStatementBoolean === false){
-          node = myInterpreter.stateStack[0].node;
-          start = node.start;
-          end = node.end;
-          completeStatementBoolean = isCompleteStatement(start, end);
-          $scope.stepButton();
-        }
-      }
-    };
+
     $scope.biggerStepButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
@@ -95,11 +80,13 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
             }
             currCompleteStatement = true;
             currStatement = programString.slice(start,end);
+            var temp = getNextCompleteStatement(programString, start, end);
           }
           $scope.stepButton();
         }
       }
     };
+
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
         text = text ? text.toString() : '';
@@ -111,6 +98,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     var disable = function(disabled) {
       document.getElementById('stepButton').disabled = disabled;
       document.getElementById('biggerStepButton').disabled = disabled;
+      document.getElementById('stepOverButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
     };
     /*
@@ -139,6 +127,36 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       //console.log(str.substring(start, end));
       return true;
     };  //END isCompleteStatement
+
+    var getNextCompleteStatement = function(programString, start, end){
+      var nextStart;
+      var nextEnd;
+      var currChar;
+      var completeStatementBoolean;
+      var statement = programString.slice(start, end);
+      var nextCompleteStatement;
+      for (var i = end; i < programString.length; i++){  //iterate until a non-whitespace / non-new line char is found
+        currChar = programString[i];
+        if ( !(/\r|\n/.test(currChar) || /\s/.test(currChar))){
+          nextStart = i;
+          break;
+        }
+      }
+      for(var j = nextStart; j < programString.length; j++){   //iterate until a new line char is found
+        currChar = programString[j];
+        if (/\r|\n/.test(currChar)){
+          nextEnd = j;
+          break;
+        }
+      }
+      if(isCompleteStatement(programString, nextStart, nextEnd)){
+        nextCompleteStatement = programString.slice(nextStart, nextEnd);
+        return nextCompleteStatement;
+      }
+      return null;
+    };
+
+
     var removeSelfReferences = function(scope){
       for(var prop in scope){
         if(typeof scope[prop] === "object"){
