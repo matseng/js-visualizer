@@ -24,7 +24,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
       var value = scopeTree.getValueOf(name);
-      root.highlightValues(value);
+      root.toggleHighlights(value);
     };
 
     $scope.parseButton = function() {
@@ -302,16 +302,16 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       }
       return result;
     };
-    VizTree.prototype.highlightValues = function(value){
+    VizTree.prototype.toggleHighlights = function(value){
       for (var key in this._scope.properties) {
         if (this._scope.properties[key] === value){
-          this.highlights[key] = true;
+          this.highlights[key] = !this.highlights[key];
         }else{
           this.highlights[key] = false;
         }
       };
       for (var i = 0; i < this._children.length; i++) {
-        this._children[i].highlightValues(value);
+        this._children[i].toggleHighlights(value);
       }
     }
 
