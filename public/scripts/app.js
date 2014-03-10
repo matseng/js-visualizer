@@ -62,7 +62,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         }
       }
       ScopeService.updateScopeViz();
-      $scope.treeArray = [ScopeService.masterTree];
+      $scope.scopeTree = ScopeService.masterTree;
     };
 
     $scope.biggerStepButton_old = function() {
@@ -290,6 +290,11 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       for (i = 1; i < tempTrees.length; i++) {
         this.masterTree.merge(tempTrees[i]);
       }
+      var currentNode = this.masterTree;
+      while(currentNode._children.length > 0){
+        currentNode = _.first(currentNode._children)
+      }
+      currentNode.activeScope = true;
     };
   })
   .directive('aceEditor', function() {
