@@ -244,3 +244,7 @@ svg {
 .editor {
   padding:0;
 }
+
+.active {
+  background-color: #81F760;
+}
