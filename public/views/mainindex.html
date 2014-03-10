@@ -11,16 +11,16 @@
           </div>
         <div id='visPane' class='col-md-7'>
             <script type="text/ng-template"  id="tree_item_renderer.html">
+                  </div>
+                    <div class="scopeWrapper" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
+                    </div>
+                  </div>
                   <div class="scopeName"><h4>Scope</h4</div>
                   <div class="scopeBody">
                     <div class="variable" ng-repeat="variable in tree.variables">
                       <div class='varName'>{{variable[0]}}</div>
                       <div class='varVal'>{{variable[1]}}</div>
                     </div>
-                  </div>
-                    <div class="scopeWrapper" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
-                    </div>
-                  </div>
                 </div>
             </script>
               <div class="displayArea">
