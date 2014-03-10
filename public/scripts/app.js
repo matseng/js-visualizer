@@ -21,14 +21,10 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
   .controller('MainController', function($scope, ScopeService) {
     $scope.codeText;
 
-    $scope.remove = function(data) {
-        data.nodes = [];
-    };
-
-    $scope.add = function(data) {
-        var post = data.nodes.length + 1;
-        var newName = data.name + '-' + post;
-        data.nodes.push({name: newName,nodes: []});
+    $scope.highlight = function(scopeTree, name){
+      var root = scopeTree.getRoot();
+      var value = scopeTree.getValueOf(name);
+      root.highlightValues(value);
     };
 
     $scope.parseButton = function() {
@@ -64,9 +60,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       ScopeService.updateScopeViz();
       $scope.scopeTree = ScopeService.masterTree;
     };
-
     $scope.biggerStepButton_old = function() {
-
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
@@ -78,15 +72,10 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
           start = node.start;
           end = node.end;
           completeStatementBoolean = isCompleteStatement(start, end);
-          // if(completeStatementBoolean){  //this if statement is for testing purposes
-          //   console.log('Complete statement found!');
-          //   console.log("  " + allCodeString.substring(start, end));
-          // }
           $scope.stepButton();
         }
       }
     };
-    
     $scope.biggerStepButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
@@ -107,7 +96,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         }
       }
     };
-    
     var isOddNumberedCompletedStatement = function(programString, start, end){
       if (!myInterpreter.oddNumberedCompletedStatement){
         myInterpreter.oddNumberedCompletedStatement = {};
@@ -124,7 +112,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         return oddNumComStaObj[start, end];
       }
     };
-
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
         text = text ? text.toString() : '';
@@ -215,27 +202,56 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       }
     };
 
-    var globalVarKeys = {'Infinity' : true, 'NaN' : true, 'undefined': true}
+    var globalVarKeys =
+      {'Infinity' : true,
+      'NaN' : true,
+      'undefined' : true,
+      'window' : true,
+      'self' : true,
+      'Function': true,
+      'Object': true,
+      'Array': true,
+      'Number': true,
+      'String': true,
+      'Boolean': true,
+      'Date' : true ,
+      'Math' : true,
+      'isNaN' : true,
+      'isFinite' : true,
+      'parseFloat' : true,
+      'parseInt' : true,
+      'eval' : true,
+      'escape' : true,
+      'unescape' : true,
+      'decodeURI' : true,
+      'decodeURIComponent' : true,
+      'encodeURI' : true,
+      'encodeURIComponent' : true,
+      'alert' : true
+    };
+
     var VizTree = function(jsiScope){
       this._scope = jsiScope;
       this._parent = null;
       this._children = [];
-      this.variables = [];
+      this.variables = {};
+      this.highlights = {};
       for(var key in jsiScope.properties){
+        if(globalVarKeys[key] !== undefined){
+          continue;
+        }
         if(key === "arguments"){
-          this.variables.push([key, stringifyArguments(jsiScope.properties[key])]);
-        }else if(globalVarKeys[key] !== undefined){
-          this.variables.push([key, key]);
+          this.variables[key] = stringifyArguments(jsiScope.properties[key]);
         }else if(jsiScope.properties[key] !== undefined){
           if(jsiScope.properties[key].type === "object"){
-              this.variables.push([key, "{}"]);
+              this.variables[key] = "{}";
           }else if(jsiScope.properties[key].type === "function"){
-            this.variables.push([key, "function(){}"]);
+            this.variables[key] = "function(){}";
           }else {
             if(jsiScope.properties[key].data === Infinity){
-              this.variables.push([key, "Infinity"]);
+              this.variables[key] = "Infinity";
             }else{
-              this.variables.push([key, jsiScope.properties[key].data]);
+              this.variables[key] = jsiScope.properties[key].data;
             }
           }
         }
@@ -246,7 +262,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         this._parent._children.push(this);
       }
     };
-    VizTree.prototype.findNode = function(jsiNode){
+    VizTree.prototype.findNode = function(vizNode){
+      var jsiNode = vizNode._scope;
       if(jsiNode === this._scope){
         return this;
       }
@@ -263,14 +280,41 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       vizNode._parent = this;
     };
     VizTree.prototype.merge = function(vizNode){
-      var foundNode = this.findNode(vizNode._scope);
+      var foundNode = this.findNode(vizNode);
       if( foundNode === false){
-        var parentNode = this.findNode(vizNode._parent._scope);
+        var parentNode = this.findNode(vizNode._parent);
         parentNode.addChild(vizNode);
       }else if( vizNode._children[0] !== undefined ){
         this.merge(vizNode._children[0]);
       }
     };
+    VizTree.prototype.getRoot = function(){
+      var currentNode = this;
+      while(currentNode._parent !== null){
+        currentNode = currentNode._parent;
+      }
+      return currentNode;
+    };
+    VizTree.prototype.getValueOf = function(name){
+      var result = this._scope.properties[name];
+      if(result === undefined && this._parent !== null){
+        result = this._parent.getValueOf(name);
+      }
+      return result;
+    };
+    VizTree.prototype.highlightValues = function(value){
+      for (var key in this._scope.properties) {
+        if (this._scope.properties[key] === value){
+          this.highlights[key] = true;
+        }else{
+          this.highlights[key] = false;
+        }
+      };
+      for (var i = 0; i < this._children.length; i++) {
+        this._children[i].highlightValues(value);
+      }
+    }
+
 
     this.updateScopeViz = function(){
       var tempTrees = [];

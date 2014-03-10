@@ -248,3 +248,7 @@ svg {
 .active {
   background-color: #81F760;
 }
+
+.highlight{
+  background-color: #F39C12;
+}
