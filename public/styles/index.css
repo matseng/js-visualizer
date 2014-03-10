@@ -3,7 +3,8 @@
 /* Padding below the footer and lighter body text */
 
 body {
-  padding-bottom: 40px;
+  height: 100%;
+  padding-top: 60px;
   color: #5a5a5a;
 }
 
@@ -148,25 +149,86 @@ body {
     margin-top: 120px;
   }
 }
-
-.scope {
-  display: inline-block;
-  border: 1px solid;
-  border-color: black;
-  padding: 5px;
-  margin: 5px;
-  border-radius: 10px;
-  overflow: auto;
-  background-color: #689AD3;
+.codeinput {
+  border: 5px solid black;
 }
-
+svg {
+  border: 5px solid black;
+}
+.heightfix{
+  height: 100%;
+}
+#codePane{
+  height: 100%;
+}
+#editor {
+  height: 100%; 
+  width: 100%;
+}
+.controls{
+  padding:5px;
+  position: absolute;
+  right:0px;
+  top: 0px;
+  font-size:12px;
+  margin-right:20px;
+  z-index: 5;
+}
+.displayArea{
+  padding:20px;
+}
+.scopeWrapper{
+  display:inline-block;
+  background-color:#fafafa;
+  border-color:#ffffff;
+  border-radius:5%;
+  opacity:50%;
+}
+.scopeBody{
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+.ace_gutter-cell.ace_breakpoint{ 
+    border-radius: 20px 0px 0px 20px; 
+    box-shadow: 0px 0px 1px 1px red inset; 
+}
 .variable {
-  border: 1px solid;
-  border-color: black;
-  padding: 3px;
+  display: inline-block;
   margin: 3px;
   border-radius: 10px;
+  font-size: 12px;
   overflow: auto;
   display: inline-block;
-  background-color: #36D695;
+}
+.varName {
+  font-size: 12px;
+  color:#fff;
+  position:relative;
+  right:-5px;
+  display: inline-block;
+  margin-bottom: 0;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  padding: 10px 15px;
+  line-height: 1.42857143;
+  border-radius: 4px;
+  padding:5px;
+  border-radius: 5px 0px 0px 5px;
+  background-color:#3498db;
+}
+.varVal {
+  position:relative;
+  right:5px;
+  color:#fff;
+  display: inline-block;
+  margin-bottom: 0;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  padding: 10px 15px;
+  line-height: 1.42857143;
+  padding:5px;
+  border-radius: 0px 5px 5px 0px;
+  background-color: #18bc9c;
+}
+.editor {
+  padding:0;
 }
