@@ -2,31 +2,28 @@
       <div class='row heightfix'>
         <div id='codePane' class='col-md-5'>
             <div id='editor' ace-editor ng-model='codeText'></div>
-            <div id='controls' class = "btn-group-vertical">
-              <button class="btn" ng-click="parseButton()">Parse</button>
-              <button class="btn" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
-              <button class="btn" ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
-              <button class="btn" ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
+            <div class = "btn-group-vertical controls">
+              <button class="btn controls" ng-click="parseButton()">Parse</button>
+              <button class="btn controls" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
+              <button class="btn controls" ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
+              <button class="btn controls" ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
             </div>
           </div>
         <div id='visPane' class='col-md-7'>
             <script type="text/ng-template"  id="tree_item_renderer.html">
-                <div class="scopeName">
-                      <h3>Scope</h3>
-                </div>
-                <div class="scopeBody">
-                  Variables:
-                  <div class="variable" ng-repeat="variable in tree.variables">
-                    <div class='varName'>{{variable[0]}}</div>
-                    <div class='varVal'>{{variable[1]}}</div>
+                  <div class="scopeName"><h4>Scope</h4</div>
+                  <div class="scopeBody">
+                    <div class="variable" ng-repeat="variable in tree.variables">
+                      <div class='varName'>{{variable[0]}}</div>
+                      <div class='varVal'>{{variable[1]}}</div>
+                    </div>
                   </div>
-                </div>
-                <div>
                     <div class="scopeWrapper" ng-repeat="tree in tree._children" ng-include="'tree_item_renderer.html'">
                     </div>
+                  </div>
                 </div>
             </script>
-              <div>
+              <div class="displayArea">
                   <div class="scopeWrapper" ng-repeat="tree in treeArray" ng-include="'tree_item_renderer.html'">
                   </div>
               </div>
