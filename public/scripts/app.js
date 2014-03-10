@@ -19,21 +19,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       });
   })
   .controller('MainController', function($scope, ScopeService) {
-    $scope.lastColIndices;
-//    $scope.codeText;
-    $scope.codeText = '  \
-var result = [];  \n  \
-function fibonacci(n, output) {  \n  \
-  var a = 1, b = 1, sum;  \n  \
-  for (var i = 0; i < n; i++) {  \n  \
-    output.push(a);  \n  \
-    sum = a + b;  \n  \
-    a = b;  \n  \
-    b = sum;  \n  \
-  }  \n  \
-}  \n  \
-fibonacci(4, result);  \n  \
-alert(result.join(", ")); ';
+    $scope.codeText;
+
     $scope.remove = function(data) {
         data.nodes = [];
     };
@@ -46,25 +33,11 @@ alert(result.join(", ")); ';
 
     $scope.parseButton = function() {
       var code = $scope.editor.getValue();
-      getlastColIndices(code);
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
+      $scope.editor.session.clearBreakpoints();
     };
 
-    var getlastColIndices = function(code) {
-      $scope.editor.setValue(code);
-      var lastRowIndex = $scope.editor.getSelection().getAllRanges()[0].end.row;
-      $scope.lastColIndices = [];
-      var lastColIndex = 0;
-
-      for (var i = 0; i <= lastRowIndex; i++){
-        $scope.editor.getSelection().moveCursorTo(i,0);
-        $scope.editor.getSelection().moveCursorLineEnd();
-        lastColIndex += $scope.editor.getSelection().getAllRanges()[0].end.column;
-        if (i>0) { lastColIndex += 1; }
-        $scope.lastColIndices[i] = lastColIndex;
-      }
-    };
     $scope.stepButton = function() {
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
@@ -75,52 +48,25 @@ alert(result.join(", ")); ';
         start = 0;
         end = 0;
       }
-      selectCode(start, end);
+      $scope.editor.getSelection().setSelectionRangeIndices(start, end);
+      $scope.editor.session.clearBreakpoints();
+      var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
+      $scope.editor.session.setBreakpoint([startRow]);
       isCompleteStatement(start, end);
       try {
         ok = myInterpreter.step();
       } finally {
         if (!ok) {
           disable('disabled');
+          $scope.editor.session.clearBreakpoints();
         }
       }
       ScopeService.updateScopeViz();
       $scope.treeArray = [ScopeService.masterTree];
     };
 
-    var selectCode = function(start, end) {
-      var startArray = getRowAndCol(start);
-      var endArray = getRowAndCol(end);
-      $scope.editor.getSelection().setSelectionRange({
-        start: {
-          row: startArray[0],
-          column: startArray[1]
-        },
-        end: {
-          row: endArray[0],
-          column: endArray[1]
-        }
-      });
-      $scope.editor.session.clearBreakpoints();
-      $scope.editor.session.setBreakpoint([startArray[0]]);
-
-    };
-
-    var getRowAndCol = function(charIndex) {
-      if (charIndex <= $scope.lastColIndices[0]) {
-        return [0,charIndex];
-      }
-      var row = 1;
-      for (var i = 1; i < $scope.lastColIndices.length; i++) {
-        if (charIndex > $scope.lastColIndices[i]) {
-          row = i+1;
-        }
-      }
-      var col = charIndex - $scope.lastColIndices[row-1] - 1;
-      return [row, col];
-    };
-
     $scope.biggerStepButton_old = function() {
+
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
@@ -139,7 +85,8 @@ alert(result.join(", ")); ';
           $scope.stepButton();
         }
       }
-    }
+    };
+    
     $scope.biggerStepButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
@@ -159,7 +106,8 @@ alert(result.join(", ")); ';
           $scope.stepButton();
         }
       }
-    }
+    };
+    
     var isOddNumberedCompletedStatement = function(programString, start, end){
       if (!myInterpreter.oddNumberedCompletedStatement){
         myInterpreter.oddNumberedCompletedStatement = {};
@@ -189,28 +137,7 @@ alert(result.join(", ")); ';
       document.getElementById('stepButton').disabled = disabled;
       document.getElementById('biggerStepButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
-      $scope.editor.session.clearBreakpoints();
     };
-    /* 
-    Highlights the text of current expression that is being evaluated:
-    */
-    // function createSelection(start, end) {
-    //   var field = document.getElementById('code');
-    //   if (field.createTextRange) {
-    //     var selRange = field.createTextRange();
-    //     selRange.collapse(true);
-    //     selRange.moveStart('character', start);
-    //     selRange.moveEnd('character', end);
-    //     selRange.select();
-    //   } else if (field.setSelectionRange) {
-    //     field.setSelectionRange(start, end);
-    //   } else if (field.selectionStart) {
-    //     field.selectionStart = start;
-    //     field.selectionEnd = end;
-    //   }
-    //   field.focus();
-    //   //console.log(isNewLine(field, start, end));
-    // }  //END createSelection
     /*
     Returns true if the node type is a complete statement 
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
@@ -238,6 +165,9 @@ alert(result.join(", ")); ';
     }  //END isCompleteStatement
 
     /*
+=======
+   /*
+>>>>>>> used setSelectionRangeIndices method
     Returns true if the node type is a complete statement
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
     */
@@ -375,7 +305,6 @@ alert(result.join(", ")); ';
       scope.editor.setValue(scope.codeText);
       scope.editor.clearSelection();
       scope.editor.renderer.setShowGutter(true);
-      // scope.editor.getSession().setBreakpoint([0]);
     }
 
   });

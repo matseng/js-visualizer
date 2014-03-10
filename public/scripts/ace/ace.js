@@ -3390,7 +3390,6 @@ var Selection = function(session) {
         this.setSelectionAnchor(0, 0);
         this.moveCursorTo(lastRow, this.doc.getLine(lastRow).length);
     };
-    this.setRange =
     this.setSelectionRange = function(range, reverse) {
         if (reverse) {
             this.setSelectionAnchor(range.end.row, range.end.column);
@@ -3403,7 +3402,48 @@ var Selection = function(session) {
             this.$isEmpty = true;
         this.$desiredColumn = null;
     };
-
+    this.setSelectionRangeIndices = function(start, end, reverse) {
+        var startRowColumn = this.getRowColumnIndices(start);
+        var endRowColumn = this.getRowColumnIndices(end);
+        this.setSelectionRange({
+            start: {
+                row: startRowColumn.row,
+                column: startRowColumn.column
+            },
+            end: {
+                row: endRowColumn.row,
+                column: endRowColumn.column
+            }
+        }, reverse);
+    };
+    this.getLastColumnIndex = function(row){
+        return this.session.getDocumentLastRowColumnPosition(row,0);
+    };
+    this.getLastColumnIndices = function(){
+        var rows = this.session.getLength();
+        var lastColumnIndices = [];
+        var lastColIndex = 0;
+        for (var i = 0; i < rows; i++){
+            lastColIndex += this.getLastColumnIndex(i).column;
+            if (i>0) { lastColIndex += 1; }
+            lastColumnIndices[i] = lastColIndex;
+        }
+        return lastColumnIndices;
+    };
+    this.getRowColumnIndices = function(characterIndex) {
+        var lastColumnIndices = this.getLastColumnIndices();
+        if (characterIndex <= lastColumnIndices[0]) {
+            return {row: 0, column: characterIndex};
+        }
+        var row = 1;
+        for (var i = 1; i < lastColumnIndices.length; i++) {
+            if (characterIndex > lastColumnIndices[i]) {
+                row = i+1;
+            }
+        }
+        var column = characterIndex - lastColumnIndices[row-1] - 1;
+        return {row: row, column: column};
+    };
     this.$moveSelection = function(mover) {
         var lead = this.lead;
         if (this.$isEmpty)
