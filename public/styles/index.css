@@ -149,6 +149,17 @@ body {
     margin-top: 120px;
   }
 }
+.scope {
+  display: inline-block;
+  border: 1px solid;
+  border-color: black;
+  padding: 5px;
+  margin: 5px;
+  border-radius: 10px;
+  overflow: auto;
+  background-color: #689AD3;
+}
+
 .codeinput {
   border: 5px solid black;
 }
@@ -180,8 +191,9 @@ svg {
 .scopeWrapper{
   display:inline-block;
   background-color:#fafafa;
-  border-color:#ffffff;
-  border-radius:5%;
+  border: 1px solid #aaaaaa;
+  border-radius: 5px;
+  padding: 5px;
   opacity:50%;
 }
 .scopeBody{
