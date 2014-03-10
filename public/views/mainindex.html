@@ -2,7 +2,7 @@
       <div class='row heightfix'>
         <div id='codePane' class='col-md-5'>
             <div id='editor' ace-editor ng-model='codeText'></div>
-            <div class = "btn-group">
+            <div id='controls' class = "btn-group-vertical">
               <button class="btn" ng-click="parseButton()">Parse</button>
               <button class="btn" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
               <button class="btn" ng-click="biggerStepButton()" id="biggerStepButton" disabled="disabled">Bigger Step</button>
