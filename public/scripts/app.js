@@ -247,12 +247,13 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
               this.variables[key] = "{}";
           }else if(jsiScope.properties[key].type === "function"){
             this.variables[key] = "function(){}";
-          }else {
-            if(jsiScope.properties[key].data === Infinity){
-              this.variables[key] = "Infinity";
-            }else{
-              this.variables[key] = jsiScope.properties[key].data;
-            }
+          }else if(jsiScope.properties[key].data === Infinity){
+            this.variables[key] = "Infinity";
+          }else if(jsiScope.properties[key].data === undefined){
+            this.variables[key] = "undefined";
+          }
+          else{
+            this.variables[key] = jsiScope.properties[key].data;
           }
         }
 
@@ -262,8 +263,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         this._parent._children.push(this);
       }
     };
-    VizTree.prototype.findNode = function(vizNode){
-      var jsiNode = vizNode._scope;
+    VizTree.prototype.findNode = function(vizTree){
+      var jsiNode = vizTree._scope;
       if(jsiNode === this._scope){
         return this;
       }
@@ -275,17 +276,20 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       }
       return false;
     };
-    VizTree.prototype.addChild = function(vizNode){
-      this._children.push(vizNode);
-      vizNode._parent = this;
+    VizTree.prototype.addChild = function(vizTree){
+      this._children.push(vizTree);
+      vizTree._parent = this;
     };
-    VizTree.prototype.merge = function(vizNode){
-      var foundNode = this.findNode(vizNode);
+    VizTree.prototype.removeSubtree = function(vizTree){
+
+    };
+    VizTree.prototype.merge = function(vizTree){
+      var foundNode = this.findNode(vizTree);
       if( foundNode === false){
-        var parentNode = this.findNode(vizNode._parent);
-        parentNode.addChild(vizNode);
-      }else if( vizNode._children[0] !== undefined ){
-        this.merge(vizNode._children[0]);
+        var parentNode = this.findNode(vizTree._parent);
+        parentNode.addChild(vizTree);
+      }else if( vizTree._children[0] !== undefined ){
+        this.merge(vizTree._children[0]);
       }
     };
     VizTree.prototype.getRoot = function(){
