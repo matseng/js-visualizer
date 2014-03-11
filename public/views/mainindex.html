@@ -12,7 +12,7 @@
         <div id='visPane' class='col-md-7'>
             <script type="text/ng-template"  id="tree_item_renderer.html">
                   </div>
-                    <div ng-class="{active: scopeTree.activeScope, scopeWrapper:true}" ng-repeat="scopeTree in scopeTree._children" ng-include="'tree_item_renderer.html'">
+                    <div ng-class="{active: scopeTree.active, scopeWrapper:true, animation:true}" ng-repeat="scopeTree in scopeTree._children" ng-include="'tree_item_renderer.html'">
                     </div>
                   </div>
                   <div class="scopeName"><h4>Scope</h4</div>
