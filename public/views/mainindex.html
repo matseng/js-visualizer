@@ -13,12 +13,12 @@
         <div id='visPane' class='col-md-7'>
             <script type="text/ng-template"  id="tree_item_renderer.html">
                   </div>
-                    <div ng-class="{active: scopeTree.activeScope, scopeWrapper:true}" ng-repeat="scopeTree in scopeTree._children" ng-include="'tree_item_renderer.html'">
+                    <div ng-class="{active: scopeTree.active, scopeWrapper:true, animation:true}" ng-repeat="scopeTree in scopeTree._children" ng-include="'tree_item_renderer.html'">
                     </div>
                   </div>
                   <div class="scopeName"><h4>Scope</h4</div>
                   <div class="scopeBody">
-                    <div class="variable" ng-repeat="(name, value) in (vars = scopeTree.variables)">
+                    <div class="variable" ng-repeat="(name, value) in scopeTree.variables">
                       <div class='varName'>{{name}}</div>
                       <button ng-click="highlight(scopeTree, name)" ng-class='{highlight: scopeTree.highlights[name], varVal: true}'>{{value}}</button>
                     </div>
