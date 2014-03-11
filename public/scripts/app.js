@@ -277,6 +277,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this._children[i].toggleHighlights(value);
       }
     };
+
     this.updateScopeViz = function(){
       var stateStack = window.myInterpreter.stateStack;
       var tempTree = new VizTree(window.myInterpreter.getScope());
