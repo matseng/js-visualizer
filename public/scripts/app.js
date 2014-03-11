@@ -166,7 +166,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         }
         if(key === "arguments"){
           variables[key] = stringifyArguments(properties[key]);
-        }else if(properties[key] === undefined || properties[key].data === undefined){
+        }else if(properties[key] === undefined){
           variables[key] = "undefined";
         }else if(properties[key].type === "object"){
           variables[key] = "{}";
@@ -174,8 +174,9 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           variables[key] = "function(){}";
         }else if(properties[key].data === Infinity){
           variables[key] = "Infinity";
-        }
-        else{
+        }else if(properties[key].data === undefined){
+          variables[key] = "undefined";
+        }else{
           variables[key] = properties[key].data;
         }
       }
@@ -208,11 +209,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       this._children.unshift(vizTree);
       vizTree._parent = this;
     };
-    VizTree.prototype.removeSubtree = function(vizTree){
-      var parent = vizTree._parent;
-      parent._children = _.difference(parent._children, [vizTree]);
-      return vizTree;
-    };
     VizTree.prototype.updateVariables = function(vizTree){
       var newNames = Object.keys(vizTree.variables);
       var oldVariables = _.pick(this.variables, newNames);
@@ -221,35 +217,61 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this._children[i].updateVariables(vizTree._children[i]);
       }
     };
-    VizTree.prototype._addNewNodes = function(vizTree){
-      var foundNode = this.findNode(vizTree);
-      if( foundNode === false){
-        var parentNode = this.findNode(vizTree._parent);
-        parentNode.addChild(vizTree);
-      }else if( vizTree._children.length !== 0 ){
-        for (var i = 0; i < vizTree._children.length; i++) {
-          this._addNewNodes(vizTree._children[i]);
+    // VizTree.prototype._addNewNodes = function(vizTree){
+    //   var foundNode = this.findNode(vizTree);
+    //   if( foundNode === false){
+    //     var parentNode = this.findNode(vizTree._parent);
+    //     parentNode.addChild(vizTree);
+    //   }else if( vizTree._children.length !== 0 ){
+    //     for (var i = 0; i < vizTree._children.length; i++) {
+    //       this._addNewNodes(vizTree._children[i]);
+    //     }
+    //   }
+    // };
+    // VizTree.prototype._removeOldNodes = function(vizTree){
+    //   console.log(this.variables, vizTree.variables);
+    //   var foundNode = vizTree.findNode(this);
+    //   if( foundNode === false){
+    //     console.log('deleting: ', this);
+    //     var parentNode = this._parent;
+    //     parentNode.remove(this);
+    //     console.log('sad parent: ', parentNode);
+    //   }else if( foundNode._children.length === 1 ){
+    //     var newThis = this.findNode(foundNode._children[0]);
+    //     newThis._removeOldNodes(vizTree);
+    //     // for (var i = 0; i < this._children.length; i++) {
+    //     //   var newThis = this._children[i];
+    //     //   newThis._removeOldNodes(vizTree);
+    //     // }
+    //   }
+    // };
+    VizTree.prototype.flatten = function(){
+      var results = [];
+      results.push(this._scope);
+      for (var i = 0; i < this._children.length; i++) {
+        results = results.concat(this._children[i].flatten());
+      }
+      return results;
+    };
+    VizTree.prototype.add = function(vizTree){
+      if(vizTree._parent === null){
+        this.updateVariables(vizTree);
+      }else{
+        var currentNode = vizTree;
+        var foundNode = this.findNode(currentNode);
+        while(foundNode === false){
+          currentNode = currentNode._parent;
+          foundNode = this.findNode(currentNode);
+        }
+        if(currentNode._children.length > 0){
+          foundNode.addChild(currentNode._children[0]);
         }
       }
     };
-    VizTree.prototype._removeOldNodes = function(vizTree){
-      var foundNode = vizTree.findNode(this);
-      if( foundNode === false){
-        console.log('deleting: ', this);
-        var parentNode = this._parent;
-        parentNode.removeSubtree(this);
-        console.log('sad parent: ', parentNode);
-      }else if( vizTree._children.length !== 0 ){
-        for (var i = 0; i < this._children.length; i++) {
-          var newThis = this._children[i];
-          newThis._removeOldNodes(vizTree);
-        }
-      }
-    };
-    VizTree.prototype.merge = function(vizTree){
-      this._addNewNodes(vizTree);
-      this.updateVariables(vizTree);
-      this._removeOldNodes(vizTree);
+    VizTree.prototype.remove = function(vizTree){
+      var parent = vizTree._parent;
+      parent._children = _.difference(parent._children, [vizTree]);
+      return vizTree;
     };
     VizTree.prototype.getRoot = function(){
       var currentNode = this;
@@ -277,19 +299,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this._children[i].toggleHighlights(value);
       }
     };
-    this.updateScopeViz = function(){
-      var stateStack = window.myInterpreter.stateStack;
-      var tempTree = new VizTree(window.myInterpreter.getScope());
-      tempTree = tempTree.getRoot();
-      if(tempTree === undefined){
-        return;
-      }
-      if(this.masterTree === null){
-        this.masterTree = tempTree;
-      }else{
-        this.masterTree.merge(tempTree);
-      }
-      window.masterTree = this.masterTree;
+    this.highlightActiveScope = function(){
       var currentNode = this.masterTree;
       while(currentNode._children.length > 0){
         currentNode = _.first(currentNode._children);
@@ -299,6 +309,26 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
       this.activeScope = currentNode;
       currentNode.active = true;
+      };
+    this.updateScopeViz = function(){
+      var stateStack = window.myInterpreter.stateStack;
+      if(window.myInterpreter.getScope() === undefined){
+        return;
+      }
+      var newScope = new VizTree(window.myInterpreter.getScope());
+      if(this.masterTree === null){
+        this.masterTree = newScope.getRoot();
+      }else{
+        //add new nodes
+        this.masterTree.add(newScope);
+        //remove old nodes
+        // jsiDiffNodes = _.difference(oldFlattened, newFlattened);
+        // for (i = 0; i < jsiDiffNodes.length; i++) {
+        //   this.remove(new VizTree(jsiDiffNodes[i]));
+        // }
+        this.masterTree.updateVariables(newScope.getRoot());
+      }
+      this.highlightActiveScope();
     };
   })
   .directive('aceEditor', function() {
