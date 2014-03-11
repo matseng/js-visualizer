@@ -18,7 +18,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         redirectTo: '/'
       });
   })
-  .controller('MainController', function($scope, ScopeService) {
+  .controller('MainController', function($scope, $interval, ScopeService) {
     $scope.codeText = '';
     $scope.prevStatement = '';
     $scope.highlight = function(scopeTree, name){
@@ -64,12 +64,12 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
 
     $scope.runButton = function() {
-      $scope.stepInterval = setInterval(function() { 
-        $scope.stepButton();
+      $scope.stepInterval = $interval(function() { 
+        $scope.stepInButton();
         if (myInterpreter.stateStack.length === 0) {
           $scope.stopInterval();
         }
-      }, 50);
+      }, 100);
     };
 
     $scope.stopInterval = function() {
@@ -319,16 +319,35 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this._children[i].updateVariables(vizTree._children[i]);
       }
     };
-    VizTree.prototype.merge = function(vizTree){
+    VizTree.prototype._addNewNodes = function(vizTree){
       var foundNode = this.findNode(vizTree);
       if( foundNode === false){
         var parentNode = this.findNode(vizTree._parent);
         parentNode.addChild(vizTree);
       }else if( vizTree._children.length !== 0 ){
         for (var i = 0; i < vizTree._children.length; i++) {
-          this.merge(vizTree._children[i]);
-        };
+          this._addNewNodes(vizTree._children[i]);
+        }
       }
+    };
+    VizTree.prototype._removeOldNodes = function(vizTree){
+      var foundNode = vizTree.findNode(this);
+      if( foundNode === false){
+        console.log('deleting: ', this);
+        var parentNode = this._parent;
+        parentNode.removeSubtree(this);
+        console.log('sad parent: ', parentNode);
+      }else if( vizTree._children.length !== 0 ){
+        for (var i = 0; i < this._children.length; i++) {
+          var newThis = this._children[i];
+          newThis._removeOldNodes(vizTree);
+        }
+      }
+    };
+    VizTree.prototype.merge = function(vizTree){
+      this._addNewNodes(vizTree);
+      this.updateVariables(vizTree);
+      this._removeOldNodes(vizTree);
     };
     VizTree.prototype.getRoot = function(){
       var currentNode = this;
@@ -351,15 +370,15 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         }else{
           this.highlights[key] = false;
         }
-      };
+      }
       for (var i = 0; i < this._children.length; i++) {
         this._children[i].toggleHighlights(value);
       }
-    }
-
+    };
     this.updateScopeViz = function(){
       var stateStack = window.myInterpreter.stateStack;
       var tempTree = new VizTree(window.myInterpreter.getScope());
+      tempTree = tempTree.getRoot();
       if(tempTree === undefined){
         return;
       }
@@ -367,12 +386,11 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this.masterTree = tempTree;
       }else{
         this.masterTree.merge(tempTree);
-        this.masterTree.updateVariables(tempTree);
       }
       window.masterTree = this.masterTree;
       var currentNode = this.masterTree;
       while(currentNode._children.length > 0){
-        currentNode = _.first(currentNode._children)
+        currentNode = _.first(currentNode._children);
       }
       if(this.activeScope){
         this.activeScope.active = false;
