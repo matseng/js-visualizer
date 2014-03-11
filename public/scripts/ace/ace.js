@@ -3417,14 +3417,14 @@ var Selection = function(session) {
         }, reverse);
     };
     this.getLastColumnIndex = function(row){
-        return this.session.getDocumentLastRowColumnPosition(row,0);
+        return this.session.getDocumentLastRowColumnPosition(row,0).column;
     };
     this.getLastColumnIndices = function(){
         var rows = this.session.getLength();
         var lastColumnIndices = [];
         var lastColIndex = 0;
         for (var i = 0; i < rows; i++){
-            lastColIndex += this.getLastColumnIndex(i).column;
+            lastColIndex += this.getLastColumnIndex(i);
             if (i>0) { lastColIndex += 1; }
             lastColumnIndices[i] = lastColIndex;
         }

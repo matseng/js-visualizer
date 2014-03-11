@@ -1,23 +1,4 @@
 var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
-  .config(function($routeProvider, $locationProvider) {
-    $locationProvider.html5Mode(true);
-    $routeProvider
-      .when('/', {
-        templateUrl: '../views/mainindex.html',
-        controller: 'MainController'
-      })
-      .when('/about', {
-        templateUrl: '../views/mainindex.html',
-        controller: 'MainController'
-      })
-      .when('/contact', {
-        templateUrl: '../views/mainindex.html',
-        controller: 'MainController'
-      })
-      .otherwise({
-        redirectTo: '/'
-      });
-  })
   .controller('MainController', function($scope, $interval, ScopeService) {
     $scope.codeText = '';
     $scope.prevStatement = '';
@@ -28,7 +9,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
 
     $scope.parseButton = function() {
-      $scope.editor.setReadOnly(true);
+      // $scope.editor.setReadOnly(true);
       var code = $scope.editor.getValue();
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
@@ -56,7 +37,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         if (!ok) {
           disable('disabled');
           $scope.editor.session.clearBreakpoints();
-          $scope.editor.setReadOnly(false);
+          // $scope.editor.setReadOnly(false);
         }
       }
       ScopeService.updateScopeViz();
@@ -74,6 +55,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
 
     $scope.stopInterval = function() {
       clearInterval($scope.stepInterval);
+      disable('disabled');      
     };
 
     $scope.stepInButton = function() {
@@ -100,13 +82,13 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
             $scope.stepButton();
           }
           if(myInterpreter.stateStack.length === 0) {
-            $scope.editor.setReadOnly(false);
+            // $scope.editor.setReadOnly(false);
+            disable('disabled');
             break;
           }
         }
       }
     };
-
     $scope.stepOverButton = function(){
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
@@ -116,7 +98,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         var currStatement = programString.slice(start,end);
         if (currStatement === programString.trim()) {
           $scope.stepInButton();
-          //   $scope.stepInButton();
           return;
         }
         while(start <= end){
@@ -126,90 +107,11 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
             var tempEnd = node.end;
           }
           if(myInterpreter.stateStack.length === 0) {
-            $scope.editor.setReadOnly(false);
+            // $scope.editor.setReadOnly(false);
+            disable('disabled');
             break;
           }
           $scope.stepButton();
-        }
-      }
-    };
-
-    var initAlert = function(interpreter, scope) {
-      var wrapper = function(text) {
-        text = text ? text.toString() : '';
-        return interpreter.createPrimitive(alert(text));
-      };
-      interpreter.setProperty(scope, 'alert',
-          interpreter.createNativeFunction(wrapper));
-    };
-    var disable = function(disabled) {
-      document.getElementById('stepButton').disabled = disabled;
-      document.getElementById('stepInButton').disabled = disabled;
-      document.getElementById('stepOverButton').disabled = disabled;
-      document.getElementById('runButton').disabled = disabled;
-    };
-    /*
-    Returns true if the node type is a complete statement
-    (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
-    */
-    var isCompleteStatement = function(programString, start, end){
-      // var str = $scope.editor.getValue();
-      var currChar;
-      for(var i = end; i < programString.length; i++){
-        currChar = programString[i];
-        if(!(/\s/.test(currChar)))  //currCharacter is NOT a white space
-          return false;
-        if(/\r|\n/.test(currChar)){  //new line found (good)
-          break;
-        }
-      }
-      for(var j = start - 1 ; j >= 0; j--){
-        currChar = programString[j];
-        if(!(/\s/.test(currChar)))
-          return false;  //return false bc character is NOT a white space
-        if(/\r|\n/.test(currChar)){
-          break;
-        }
-      }
-      //console.log(str.substring(start, end));
-      return true;
-    };  //END isCompleteStatement
-
-    var getNextCompleteStatement = function(programString, start, end){
-      var nextStart;
-      var nextEnd;
-      var currChar;
-      var completeStatementBoolean;
-      var statement = programString.slice(start, end);
-      var nextCompleteStatement = {};
-      for (var i = end; i < programString.length; i++){  //iterate until a non-whitespace / non-new line char is found
-        currChar = programString[i];
-        if ( !(/\r|\n/.test(currChar) || /\s/.test(currChar))){
-          nextStart = i;
-          break;
-        }
-      }
-      for(var j = nextStart; j < programString.length; j++){   //iterate until a new line char is found
-        currChar = programString[j];
-        if (/\r|\n/.test(currChar)){
-          nextEnd = j;
-          break;
-        }
-      }
-      if(isCompleteStatement(programString, nextStart, nextEnd)){
-        nextCompleteStatement.string = programString.slice(nextStart, nextEnd);
-        nextCompleteStatement.start = nextStart;
-        nextCompleteStatement.end = nextEnd;
-        return nextCompleteStatement;
-      }
-      return null;
-    };
-
-
-    var removeSelfReferences = function(scope){
-      for(var prop in scope){
-        if(typeof scope[prop] === "object"){
-          scope[prop] = "{}";
         }
       }
     };
@@ -413,5 +315,4 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       scope.editor.clearSelection();
       scope.editor.renderer.setShowGutter(true);
     }
-
   });
