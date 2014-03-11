@@ -20,6 +20,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
   })
   .controller('MainController', function($scope, ScopeService) {
     $scope.codeText = '';
+    $scope.prevStatement = '';
 
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
@@ -80,9 +81,60 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
             }
             currCompleteStatement = true;
             currStatement = programString.slice(start,end);
-            var temp = getNextCompleteStatement(programString, start, end);
           }
           $scope.stepButton();
+        }
+      }
+    };
+
+    $scope.stepOverButton = function(){
+      if (myInterpreter.stateStack[0]) {
+        var node = myInterpreter.stateStack[0].node;
+        var start = node.start;
+        var end = node.end;
+        var programString = $scope.editor.getValue();
+        var currStatement = programString.slice(start,end);
+        if (currStatement === programString.trim()) {
+          $scope.biggerStepButton();
+          $scope.biggerStepButton();
+          return;
+        }
+        while(start <= end){
+          if(myInterpreter.stateStack[0]){
+            node = myInterpreter.stateStack[0].node;
+            start = node.start;
+            var tempEnd = node.end;
+          }
+          if(myInterpreter.stateStack.length === 0)
+            break;
+          $scope.stepButton();
+        }
+      }
+    };
+
+
+    $scope.stepOverButton_notWorking = function(){
+      if (myInterpreter.stateStack[1]) {  //changed index to 1 to match highlighting
+        var node = myInterpreter.stateStack[1].node;
+        var start = node.start;
+        var end = node.end;
+        var programString = $scope.editor.getValue();
+        var currStatement = programString.slice(start,end);
+        var currCompleteStatementBoolean = isCompleteStatement(programString, start, end);
+        var nextCompleteStatementObj = getNextCompleteStatement(programString, start, end);
+        if(nextCompleteStatementObj){
+          while(nextCompleteStatementObj === null || start < nextCompleteStatementObj.end){
+            node = myInterpreter.stateStack[0].node;  //switch index back to 0 (zero)
+            start = node.start;
+            end = node.end;
+            var tempCurrentStatement = programString.slice(start,end);
+            if( getNextCompleteStatement(programString, start, end)){
+              nextCompleteStatementObj = getNextCompleteStatement(programString, start, end);
+            }
+            $scope.stepButton();
+          }
+        } else {
+         $scope.biggerStepButton();
         }
       }
     };
@@ -134,7 +186,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       var currChar;
       var completeStatementBoolean;
       var statement = programString.slice(start, end);
-      var nextCompleteStatement;
+      var nextCompleteStatement = {};
       for (var i = end; i < programString.length; i++){  //iterate until a non-whitespace / non-new line char is found
         currChar = programString[i];
         if ( !(/\r|\n/.test(currChar) || /\s/.test(currChar))){
@@ -150,7 +202,9 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         }
       }
       if(isCompleteStatement(programString, nextStart, nextEnd)){
-        nextCompleteStatement = programString.slice(nextStart, nextEnd);
+        nextCompleteStatement.string = programString.slice(nextStart, nextEnd);
+        nextCompleteStatement.start = nextStart;
+        nextCompleteStatement.end = nextEnd;
         return nextCompleteStatement;
       }
       return null;
