@@ -63,9 +63,15 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
 
     $scope.runButton = function() {
-      while(myInterpreter.stateStack.length > 0) {
-        $scope.stepButton();
-      }
+      $scope.stepInterval = setInterval(function() { 
+        if (myInterpreter.stateStack.length === 0) {
+          $scope.stopInterval();
+        }
+      }, 50);
+    };
+
+    $scope.stopInterval = function() {
+      clearInterval($scope.stepInterval);
     };
 
     $scope.stepInButton = function() {
