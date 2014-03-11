@@ -18,7 +18,7 @@
                   </div>
                   <div class="scopeName"><h4>Scope</h4</div>
                   <div class="scopeBody">
-                    <div class="variable" ng-repeat="(name, value) in (vars = scopeTree.variables)">
+                    <div class="variable" ng-repeat="(name, value) in scopeTree.variables">
                       <div class='varName'>{{name}}</div>
                       <button ng-click="highlight(scopeTree, name)" ng-class='{highlight: scopeTree.highlights[name], varVal: true}'>{{value}}</button>
                     </div>

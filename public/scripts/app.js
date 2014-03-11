@@ -257,35 +257,34 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       'encodeURIComponent' : true,
       'alert' : true
     };
-
+    var stringifyProperties = function(variables, properties){
+      for(var key in properties){
+        if(globalVarKeys[key] !== undefined){
+          continue;
+        }
+        if(key === "arguments"){
+          variables[key] = stringifyArguments(properties[key]);
+        }else if(properties[key] === undefined || properties[key].data === undefined){
+          variables[key] = "undefined";
+        }else if(properties[key].type === "object"){
+          variables[key] = "{}";
+        }else if(properties[key].type === "function"){
+          variables[key] = "function(){}";
+        }else if(properties[key].data === Infinity){
+          variables[key] = "Infinity";
+        }
+        else{
+          variables[key] = properties[key].data;
+        }
+      }
+    };
     var VizTree = function(jsiScope){
       this._scope = jsiScope;
       this._parent = null;
       this._children = [];
       this.variables = {};
       this.highlights = {};
-      for(var key in jsiScope.properties){
-        if(globalVarKeys[key] !== undefined){
-          continue;
-        }
-        if(key === "arguments"){
-          this.variables[key] = stringifyArguments(jsiScope.properties[key]);
-        }else if(jsiScope.properties[key] !== undefined){
-          if(jsiScope.properties[key].type === "object"){
-              this.variables[key] = "{}";
-          }else if(jsiScope.properties[key].type === "function"){
-            this.variables[key] = "function(){}";
-          }else if(jsiScope.properties[key].data === Infinity){
-            this.variables[key] = "Infinity";
-          }else if(jsiScope.properties[key].data === undefined){
-            this.variables[key] = "undefined";
-          }
-          else{
-            this.variables[key] = jsiScope.properties[key].data;
-          }
-        }
-
-      }
+      stringifyProperties(this.variables, jsiScope.properties);
       if(jsiScope.parentScope !== null){
         this._parent = new VizTree(jsiScope.parentScope);
         this._parent._children.push(this);
@@ -312,16 +311,23 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       parent._children = _.difference(parent._children, [vizTree]);
       return vizTree;
     };
-    VizTree.prototype.union = function(vizTree){
+    VizTree.prototype.updateVariables = function(vizTree){
+      var newNames = Object.keys(vizTree.variables);
+      var oldVariables = _.pick(this.variables, newNames);
+      this.variables = _.extend(oldVariables, vizTree.variables);
+      for (var i = 0; i < this._children.length && i < vizTree._children.length; i++) {
+        this._children[i].updateVariables(vizTree._children[i]);
+      }
+    };
+    VizTree.prototype.merge = function(vizTree){
       var foundNode = this.findNode(vizTree);
       if( foundNode === false){
         var parentNode = this.findNode(vizTree._parent);
         parentNode.addChild(vizTree);
       }else if( vizTree._children.length !== 0 ){
         for (var i = 0; i < vizTree._children.length; i++) {
-          this.union(vizTree._children[i]);
+          this.merge(vizTree._children[i]);
         };
-        // this.union(vizTree._children[0]);
       }
     };
     VizTree.prototype.getRoot = function(){
@@ -360,7 +366,8 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       if(this.masterTree === null){
         this.masterTree = tempTree;
       }else{
-        this.masterTree.union(tempTree);
+        this.masterTree.merge(tempTree);
+        this.masterTree.updateVariables(tempTree);
       }
       window.masterTree = this.masterTree;
       var currentNode = this.masterTree;
