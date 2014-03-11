@@ -113,7 +113,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         var currStatement = programString.slice(start,end);
         if (currStatement === programString.trim()) {
           $scope.stepInButton();
-          $scope.stepInButton();
+          //$scope.stepInButton();
           return;
         }
         while(start <= end){
