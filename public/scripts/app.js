@@ -30,7 +30,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       $scope.editor.session.clearBreakpoints();
       var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
       $scope.editor.session.setBreakpoint([startRow]);
-      isCompleteStatement(start, end);
       try {
         ok = myInterpreter.step();
       } finally {
@@ -56,6 +55,8 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     $scope.stopInterval = function() {
       clearInterval($scope.stepInterval);
       disable('disabled');      
+      $scope.editor.session.clearBreakpoints();
+      $scope.editor.clearSelection();
     };
 
     $scope.stepInButton = function() {
@@ -313,6 +314,5 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       scope.editor.getSession().setTabSize(2);
       scope.editor.setValue(scope.codeText);
       scope.editor.clearSelection();
-      scope.editor.renderer.setShowGutter(true);
     }
   });
