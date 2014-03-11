@@ -29,6 +29,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
 
     $scope.parseButton = function() {
+      $scope.editor.setReadOnly(true);
       var code = $scope.editor.getValue();
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
@@ -56,6 +57,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         if (!ok) {
           disable('disabled');
           $scope.editor.session.clearBreakpoints();
+          $scope.editor.setReadOnly(false);
         }
       }
       ScopeService.updateScopeViz();
@@ -98,8 +100,10 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
             }
             $scope.stepButton();
           }
-          if(myInterpreter.stateStack.length === 0)
+          if(myInterpreter.stateStack.length === 0) {
+            $scope.editor.setReadOnly(false);
             break;
+          }
         }
       }
     };
@@ -113,7 +117,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         var currStatement = programString.slice(start,end);
         if (currStatement === programString.trim()) {
           $scope.stepInButton();
-          //$scope.stepInButton();
+          //   $scope.stepInButton();
           return;
         }
         while(start <= end){
@@ -122,14 +126,14 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
             start = node.start;
             var tempEnd = node.end;
           }
-          if(myInterpreter.stateStack.length === 0)
+          if(myInterpreter.stateStack.length === 0) {
+            $scope.editor.setReadOnly(false);
             break;
+          }
           $scope.stepButton();
         }
       }
     };
-
-
 
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
