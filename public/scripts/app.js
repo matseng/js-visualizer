@@ -62,7 +62,13 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
       $scope.scopeTree = ScopeService.masterTree;
     };
 
-    $scope.biggerStepButton = function() {
+    $scope.runButton = function() {
+      while(myInterpreter.stateStack.length > 0) {
+        $scope.stepButton();
+      }
+    };
+
+    $scope.stepInButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
@@ -71,18 +77,22 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         var currStatement = programString.slice(start,end);
         var currCompleteStatement = isCompleteStatement(programString, start, end);
         $scope.stepButton();
-        while($scope.prevStatement === currStatement || currCompleteStatement === false){
-          node = myInterpreter.stateStack[0].node;
-          start = node.start;
-          end = node.end;
-          if (isCompleteStatement(programString, start, end)) {
-            if (currCompleteStatement === true) {
-              $scope.prevStatement = currStatement;
+        while($scope.prevStatement === currStatement || currCompleteStatement === false || currStatement === programString.trim()){
+          if(myInterpreter.stateStack[0]){
+            node = myInterpreter.stateStack[0].node;
+            start = node.start;
+            end = node.end;
+            if (isCompleteStatement(programString, start, end)) {
+              if (currCompleteStatement === true) {
+                $scope.prevStatement = currStatement;
+              }
+              currCompleteStatement = true;
+              currStatement = programString.slice(start,end);
             }
-            currCompleteStatement = true;
-            currStatement = programString.slice(start,end);
+            $scope.stepButton();
           }
-          $scope.stepButton();
+          if(myInterpreter.stateStack.length === 0)
+            break;
         }
       }
     };
@@ -95,8 +105,8 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
         var programString = $scope.editor.getValue();
         var currStatement = programString.slice(start,end);
         if (currStatement === programString.trim()) {
-          $scope.biggerStepButton();
-          $scope.biggerStepButton();
+          $scope.stepInButton();
+          $scope.stepInButton();
           return;
         }
         while(start <= end){
@@ -113,31 +123,6 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
 
 
-    $scope.stepOverButton_notWorking = function(){
-      if (myInterpreter.stateStack[1]) {  //changed index to 1 to match highlighting
-        var node = myInterpreter.stateStack[1].node;
-        var start = node.start;
-        var end = node.end;
-        var programString = $scope.editor.getValue();
-        var currStatement = programString.slice(start,end);
-        var currCompleteStatementBoolean = isCompleteStatement(programString, start, end);
-        var nextCompleteStatementObj = getNextCompleteStatement(programString, start, end);
-        if(nextCompleteStatementObj){
-          while(nextCompleteStatementObj === null || start < nextCompleteStatementObj.end){
-            node = myInterpreter.stateStack[0].node;  //switch index back to 0 (zero)
-            start = node.start;
-            end = node.end;
-            var tempCurrentStatement = programString.slice(start,end);
-            if( getNextCompleteStatement(programString, start, end)){
-              nextCompleteStatementObj = getNextCompleteStatement(programString, start, end);
-            }
-            $scope.stepButton();
-          }
-        } else {
-         $scope.biggerStepButton();
-        }
-      }
-    };
 
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
@@ -149,7 +134,7 @@ var jsvis = angular.module('jsvis', ['ngRoute'])
     };
     var disable = function(disabled) {
       document.getElementById('stepButton').disabled = disabled;
-      document.getElementById('biggerStepButton').disabled = disabled;
+      document.getElementById('stepInButton').disabled = disabled;
       document.getElementById('stepOverButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
     };
