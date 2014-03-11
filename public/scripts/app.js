@@ -8,7 +8,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       })
       .when('/about', {
         templateUrl: '../views/mainindex.html',
-        controller: 'MainController'        
+        controller: 'MainController'
       })
       .when('/contact', {
         templateUrl: '../views/mainindex.html',
@@ -19,6 +19,8 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       });
   })
   .controller('MainController', function($scope, ScopeService) {
+    $scope.codeText = '';
+    $scope.prevStatement = '';
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
       var value = scopeTree.getValueOf(name);
@@ -26,6 +28,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
 
     $scope.parseButton = function() {
+      $scope.editor.setReadOnly(true);
       var code = $scope.editor.getValue();
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
@@ -53,63 +56,84 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         if (!ok) {
           disable('disabled');
           $scope.editor.session.clearBreakpoints();
+          $scope.editor.setReadOnly(false);
         }
       }
       ScopeService.updateScopeViz();
       $scope.scopeTree = ScopeService.masterTree;
     };
-    $scope.biggerStepButton_old = function() {
+
+    $scope.runButton = function() {
+      $scope.stepInterval = setInterval(function() { 
+        $scope.stepButton();
+        if (myInterpreter.stateStack.length === 0) {
+          $scope.stopInterval();
+        }
+      }, 50);
+    };
+
+    $scope.stopInterval = function() {
+      clearInterval($scope.stepInterval);
+    };
+
+    $scope.stepInButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
         var end = node.end;
-        var completeStatementBoolean = false;  //initialized to false to enter while loop
-        var allCodeString = $scope.editor.getValue();
-        while(completeStatementBoolean === false){
-          node = myInterpreter.stateStack[0].node;
-          start = node.start;
-          end = node.end;
-          completeStatementBoolean = isCompleteStatement(start, end);
-          $scope.stepButton();
+        var programString = $scope.editor.getValue();
+        var currStatement = programString.slice(start,end);
+        var currCompleteStatement = isCompleteStatement(programString, start, end);
+        $scope.stepButton();
+        while($scope.prevStatement === currStatement || currCompleteStatement === false || currStatement === programString.trim()){
+          if(myInterpreter.stateStack[0]){
+            node = myInterpreter.stateStack[0].node;
+            start = node.start;
+            end = node.end;
+            if (isCompleteStatement(programString, start, end)) {
+              if (currCompleteStatement === true) {
+                $scope.prevStatement = currStatement;
+              }
+              currCompleteStatement = true;
+              currStatement = programString.slice(start,end);
+            }
+            $scope.stepButton();
+          }
+          if(myInterpreter.stateStack.length === 0) {
+            $scope.editor.setReadOnly(false);
+            break;
+          }
         }
       }
     };
-    $scope.biggerStepButton = function() {
+
+    $scope.stepOverButton = function(){
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;
         var end = node.end;
-        var oddNumComStaObjBoolean = false;  //initialized to false to enter while loop
         var programString = $scope.editor.getValue();
-        while(oddNumComStaObjBoolean === false){
-          node = myInterpreter.stateStack[0].node;
-          start = node.start;
-          end = node.end;
-          oddNumComStaObjBoolean = isOddNumberedCompletedStatement(programString, start, end);
-          if(oddNumComStaObjBoolean){  //this if statement is for testing purposes
-            // console.log('Complete statement found!');
-            // console.log("  " + programString.substring(start, end));
+        var currStatement = programString.slice(start,end);
+        if (currStatement === programString.trim()) {
+          $scope.stepInButton();
+          //   $scope.stepInButton();
+          return;
+        }
+        while(start <= end){
+          if(myInterpreter.stateStack[0]){
+            node = myInterpreter.stateStack[0].node;
+            start = node.start;
+            var tempEnd = node.end;
+          }
+          if(myInterpreter.stateStack.length === 0) {
+            $scope.editor.setReadOnly(false);
+            break;
           }
           $scope.stepButton();
         }
       }
     };
-    var isOddNumberedCompletedStatement = function(programString, start, end){
-      if (!myInterpreter.oddNumberedCompletedStatement){
-        myInterpreter.oddNumberedCompletedStatement = {};
-      }
-      var oddNumComStaObj = myInterpreter.oddNumberedCompletedStatement;
-      var completeStatement = isCompleteStatement(programString, start, end);
-      if(completeStatement === false)
-        return false;
-      if(oddNumComStaObj[start, end] === undefined){
-        oddNumComStaObj[start, end] = true;
-        return true;
-      } else {
-        oddNumComStaObj[start, end] = !(oddNumComStaObj[start, end]);
-        return oddNumComStaObj[start, end];
-      }
-    };
+
     var initAlert = function(interpreter, scope) {
       var wrapper = function(text) {
         text = text ? text.toString() : '';
@@ -120,63 +144,68 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
     var disable = function(disabled) {
       document.getElementById('stepButton').disabled = disabled;
-      document.getElementById('biggerStepButton').disabled = disabled;
+      document.getElementById('stepInButton').disabled = disabled;
+      document.getElementById('stepOverButton').disabled = disabled;
       document.getElementById('runButton').disabled = disabled;
     };
     /*
-    Returns true if the node type is a complete statement 
+    Returns true if the node type is a complete statement
     (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
     */
     var isCompleteStatement = function(programString, start, end){
       // var str = $scope.editor.getValue();
+      var currChar;
       for(var i = end; i < programString.length; i++){
-        var char = programString[i];
-        if(!(/\s/.test(char)))  //character is NOT a white space
+        currChar = programString[i];
+        if(!(/\s/.test(currChar)))  //currCharacter is NOT a white space
           return false;
-        if(/\r|\n/.test(char)){  //new line found (good)
+        if(/\r|\n/.test(currChar)){  //new line found (good)
           break;
         }
       }
       for(var j = start - 1 ; j >= 0; j--){
-        var char = programString[j];
-        if(!(/\s/.test(char)))
+        currChar = programString[j];
+        if(!(/\s/.test(currChar)))
           return false;  //return false bc character is NOT a white space
-        if(/\r|\n/.test(char)){
-          break;
-        }
-      }
-      //console.log(str.substring(start, end));
-      return true;
-    }  //END isCompleteStatement
-
-    /*
-=======
-   /*
->>>>>>> used setSelectionRangeIndices method
-    Returns true if the node type is a complete statement
-    (e.g. forStatement, variableStatement (includes a semicolon), expressionStatement (includes semicolor))
-    */
-    var isCompleteStatement_old = function(start, end){
-      var str = $scope.editor.getValue();
-      for(var i = end; i < str.length; i++){
-        var char = str[i];
-        if(!(/\s/.test(char)))  //character is NOT a white space
-          return false;
-        if(/\r|\n/.test(char)){  //new line found (good)
-          break;
-        }
-      }
-      for(var j = start - 1 ; j >= 0; j--){
-        var char = str[j];
-        if(!(/\s/.test(char)))
-          return false;  //return false bc character is NOT a white space
-        if(/\r|\n/.test(char)){
+        if(/\r|\n/.test(currChar)){
           break;
         }
       }
       //console.log(str.substring(start, end));
       return true;
     };  //END isCompleteStatement
+
+    var getNextCompleteStatement = function(programString, start, end){
+      var nextStart;
+      var nextEnd;
+      var currChar;
+      var completeStatementBoolean;
+      var statement = programString.slice(start, end);
+      var nextCompleteStatement = {};
+      for (var i = end; i < programString.length; i++){  //iterate until a non-whitespace / non-new line char is found
+        currChar = programString[i];
+        if ( !(/\r|\n/.test(currChar) || /\s/.test(currChar))){
+          nextStart = i;
+          break;
+        }
+      }
+      for(var j = nextStart; j < programString.length; j++){   //iterate until a new line char is found
+        currChar = programString[j];
+        if (/\r|\n/.test(currChar)){
+          nextEnd = j;
+          break;
+        }
+      }
+      if(isCompleteStatement(programString, nextStart, nextEnd)){
+        nextCompleteStatement.string = programString.slice(nextStart, nextEnd);
+        nextCompleteStatement.start = nextStart;
+        nextCompleteStatement.end = nextEnd;
+        return nextCompleteStatement;
+      }
+      return null;
+    };
+
+
     var removeSelfReferences = function(scope){
       for(var prop in scope){
         if(typeof scope[prop] === "object"){
