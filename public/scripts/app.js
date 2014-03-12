@@ -36,14 +36,14 @@ alert(result.join(", ")); ';
         node = myInterpreter.stateStack[0].node;
         start = node.start;
         end = node.end;
-        console.log(node.type);
-        if(node.type === "FunctionDeclaration" || node.type === "VariableDeclaration"){
-          headerAndBody = segmentFunctionDeclaration($scope.editor.getValue(), start, end);
-          if(headerAndBody){
-            start = headerAndBody.header.start;
-            end = headerAndBody.header.end;
-          }
-        }
+        // console.log(node.type);
+        // if(node.type === "FunctionDeclaration" || node.type === "VariableDeclaration"){
+        //   headerAndBody = segmentFunctionDeclaration($scope.editor.getValue(), start, end);
+        //   if(headerAndBody){
+        //     start = headerAndBody.header.start;
+        //     end = headerAndBody.header.end;
+        //   }
+        // }
       } else {
         start = 0;
         end = 0;

@@ -39,6 +39,17 @@ var Interpreter = function(code, opt_initFunc) {
   window.jsinterp = this;
   // window.jsinterp.global = scope;
   this.stateStack = [{node: this.ast, scope: scope, thisExpression: scope}];
+  /*
+  Save last ast node that was popped off of the stateStack
+  */
+  this.node_popped = {};
+  var that = this;
+  var nativeShift = this.stateStack.shift;
+  this.stateStack.shift = function(){
+    that.node_popped = nativeShift.apply(this, arguments);
+    return that.node_popped;
+  };
+
 };
 
 /**
