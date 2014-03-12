@@ -79,7 +79,7 @@ alert(result.join(", ")); ';
 
     $scope.stopInterval = function() {
       clearInterval($scope.stepInterval);
-      disable('disabled');      
+      disable('disabled');
     };
 
     $scope.stepInButton = function() {
@@ -88,27 +88,18 @@ alert(result.join(", ")); ';
         var start = node.start;
         var end = node.end;
         var programString = $scope.editor.getValue();
-        var currStatement = programString.slice(start,end);
-        var currCompleteStatement = isCompleteStatement(programString, start, end);
-        $scope.stepButton();
-        while($scope.prevStatement === currStatement || currCompleteStatement === false || currStatement === programString.trim()){
-          if(myInterpreter.stateStack[0]){
-            node = myInterpreter.stateStack[0].node;
-            start = node.start;
-            end = node.end;
-            if (isCompleteStatement(programString, start, end)) {
-              if (currCompleteStatement === true) {
-                $scope.prevStatement = currStatement;
-              }
-              currCompleteStatement = true;
-              currStatement = programString.slice(start,end);
-            }
-            $scope.stepButton();
-          }
-          if(myInterpreter.stateStack.length === 0) {
-            // $scope.editor.setReadOnly(false);
-            disable('disabled');
-            break;
+        var prevNodePopped = myInterpreter.nodePopped;
+        var newNodePopped = prevNodePopped;
+        var nodePoppedCompleteStatementBoolean;
+        //if(nodePopped)
+        //  nodePoppedCompleteStatementBoolean = isCompleteStatement(programString, nodePopped.node.start, nodePopped.node.end);
+        //while(!nodePopped || !nodePoppedCompleteStatementBoolean){
+        while(prevNodePopped === newNodePopped || !nodePoppedCompleteStatementBoolean){
+          $scope.stepButton();
+          if (myInterpreter.stateStack[0] && myInterpreter.nodePopped) {
+            newNodePopped = myInterpreter.nodePopped;
+            if(newNodePopped)
+              nodePoppedCompleteStatementBoolean = isCompleteStatement(programString, newNodePopped.node.start, newNodePopped.node.end);
           }
         }
       }
