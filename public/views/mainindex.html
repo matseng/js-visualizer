@@ -4,10 +4,10 @@
         <div id='editor' ace-editor ng-model='codeText'></div>
         <div class = "btn-group-vertical controls">
           <button class="btn controls" ng-click="parseButton()">Parse</button>
-          <button class="btn controls" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
-          <button class="btn controls" ng-click="stepInButton()" id="stepInButton" disabled="disabled">Step In</button>
-          <button class="btn controls" ng-click="stepOverButton()" id="stepOverButton" disabled="disabled">Step Over</button>
-          <button class="btn controls" ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
+          <button class="btn controls" ng-click="stepButton()" id="stepButton" ng-disabled="disableSteps">Step</button>
+          <button class="btn controls" ng-click="stepInButton()" id="stepInButton" ng-disabled="disableSteps">Step In</button>
+          <button class="btn controls" ng-click="stepOverButton()" id="stepOverButton" ng-disabled="disableSteps">Step Over</button>
+          <button class="btn controls" ng-click="run()" id="runButton" ng-disabled="disableRun">Run</button>
         </div>
       </div>
     <div id='visPane' class='col-md-7'>
