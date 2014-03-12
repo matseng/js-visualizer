@@ -7,7 +7,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     $scope.prevStatement = '';
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
-      var value = scopeTree.getValueOf(name);
+      var value = ScopeService.getValue(scopeTree, name);
       root.toggleHighlights(value);
     };
 
@@ -295,10 +295,10 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         updateVariables(oldTree._children[i], newTree._children[i]);
       }
     };
-    VizTree.prototype.getValueOf = function(name){
-      var result = this._scope.properties[name];
-      if(result === undefined && this._parent !== null){
-        result = this._parent.getValueOf(name);
+    this.getValue = function(tree, name){
+      var result = tree._scope.properties[name];
+      if(result === undefined && tree._parent !== null){
+        result = getValue(tree._parent, name);
       }
       return result;
     };
