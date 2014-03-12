@@ -191,7 +191,7 @@ svg {
   padding:20px;
 }
 .scopeWrapper{
-  display:inline-block;
+  /*display:inline-block;*/
   background-color:#fafafa;
   border: 1px solid #aaaaaa;
   border-radius: 5px;
@@ -262,7 +262,7 @@ svg {
     /*-o-transition: 400ms ease-in-out all;*/
     /*transition: 400ms ease-in-out all;*/
     /*position: relative;*/
-    display: inline-block;
+    /*display: inline-block;*/
 }
 
 .scopeWrapper.ng-enter {
