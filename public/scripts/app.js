@@ -271,9 +271,10 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
       return results;
     };
+    //--------------
     VizTree.prototype.addScope = function(vizTree){
       if(vizTree._parent === null){
-        this.updateVariables(vizTree);
+        updateVariables(this, vizTree);
       }else{
         var currentNode = vizTree;
         var foundNode = this.findNode(currentNode);
@@ -286,12 +287,12 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         }
       }
     };
-    VizTree.prototype.updateVariables = function(vizTree){
-      var newNames = Object.keys(vizTree.variables);
-      var oldVariables = _.pick(this.variables, newNames);
-      this.variables = _.extend(oldVariables, vizTree.variables);
-      for (var i = 0; i < this._children.length && i < vizTree._children.length; i++) {
-        this._children[i].updateVariables(vizTree._children[i]);
+    var updateVariables = function(oldTree, newTree){
+      var newNames = Object.keys(newTree.variables);
+      var oldVariables = _.pick(oldTree.variables, newNames);
+      oldTree.variables = _.extend(oldVariables, newTree.variables);
+      for (var i = 0; i < oldTree._children.length && i < newTree._children.length; i++) {
+        updateVariables(oldTree._children[i], newTree._children[i]);
       }
     };
     VizTree.prototype.getValueOf = function(name){
@@ -313,6 +314,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this._children[i].toggleHighlights(value);
       }
     };
+
     this.highlightActiveScope = function(){
       var currentNode = this.masterTree;
       while(currentNode._children.length > 0){
@@ -334,7 +336,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this.masterTree = newScope.getRoot();
       }else{
         this.masterTree.addScope(newScope);
-        this.masterTree.updateVariables(newScope.getRoot());
+        updateVariables(this.masterTree, newScope.getRoot());
       }
 
       var tempTrees = [];
