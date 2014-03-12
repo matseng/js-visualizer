@@ -1,35 +1,33 @@
 <div class="container index heightfix" ng-controller='MainController'>
-      <div class='row heightfix'>
-        <div id='codePane' class='col-md-5'>
-            <div id='editor' ace-editor ng-model='codeText'></div>
-            <div class = "btn-group-vertical controls">
-              <button class="btn controls" ng-click="parseButton()">Parse</button>
-              <button class="btn controls" ng-click="stepButton()" id="stepButton" disabled="disabled">Step</button>
-              <button class="btn controls" ng-click="stepInButton()" id="stepInButton" disabled="disabled">Step In</button>
-              <button class="btn controls" ng-click="stepOverButton()" id="stepOverButton" disabled="disabled">Step Over</button>
-              <button class="btn controls" ng-click="runButton()" id="runButton" disabled="disabled">Run</button>
-            </div>
-          </div>
-        <div id='visPane' class='col-md-7'>
-            <script type="text/ng-template"  id="tree_item_renderer.html">
-                  </div>
-                    <div ng-class="{active: scopeTree.active, scopeWrapper:true, animation:true}" ng-repeat="scopeTree in scopeTree._children" ng-include="'tree_item_renderer.html'">
-                    </div>
-                  </div>
-                  <div class="scopeName"><h4>Scope</h4</div>
-                  <div class="scopeBody">
-                    <div class="variable" ng-repeat="(name, value) in scopeTree.variables">
-                      <div class='varName'>{{name}}</div>
-                      <button ng-click="highlight(scopeTree, name)" ng-class='{highlight: scopeTree.highlights[name], varVal: true}'>{{value}}</button>
-                    </div>
-                </div>
-            </script>
-              <div class="displayArea">
-                  <div class="scopeWrapper" ng-model="scopeTree" ng-include="'tree_item_renderer.html'">
-                  </div>
-              </div>
-          </div>
+  <div class='row heightfix'>
+    <div id='codePane' class='col-md-5'>
+        <div id='editor' ace-editor ng-model='codeText'></div>
+        <div class = "btn-group-vertical controls">
+          <button class="btn controls" ng-click="parseButton()">Parse</button>
+          <button class="btn controls" ng-click="stepButton()" id="stepButton" ng-disabled="disableSteps">Step</button>
+          <button class="btn controls" ng-click="stepInButton()" id="stepInButton" ng-disabled="disableSteps">Step In</button>
+          <button class="btn controls" ng-click="stepOverButton()" id="stepOverButton" ng-disabled="disableSteps">Step Over</button>
+          <button class="btn controls" ng-click="run()" id="runButton" ng-disabled="disableRun">Run</button>
         </div>
       </div>
+    <div id='visPane' class='col-md-7'>
+        <script type="text/ng-template"  id="tree_item_renderer.html">
+          <div ng-class="{active: scopeTree.active, scopeWrapper:true}" ng-repeat="scopeTree in scopeTree._children" ng-include="'tree_item_renderer.html'">
+          </div>
+          <div class="scopeName"><h4>Scope</h4</div>
+          <div class="scopeBody">
+            <div class="variable" ng-repeat="(name, value) in scopeTree.variables">
+              <div class='varName'>{{name}}</div>
+              <button ng-click="highlight(scopeTree, name)" ng-class='{highlight: scopeTree.highlights[name], varVal: true}'>{{value}}</button>
+            </div>
+          </div>
+        </script>
+          <div class="displayArea">
+            <div ng-class="{scopeWrapper:true}" ng-model="scopeTree" ng-include="'tree_item_renderer.html'">
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
 
 
