@@ -8,7 +8,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
       var value = ScopeService.getValue(scopeTree, name);
-      root.toggleHighlights(value);
+      ScopeService.toggleHighlights(root, value);
     };
 
     $scope.parseButton = function() {
@@ -302,16 +302,16 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
       return result;
     };
-    VizTree.prototype.toggleHighlights = function(value){
-      for (var key in this._scope.properties) {
-        if (this._scope.properties[key] === value){
-          this.highlights[key] = !this.highlights[key];
+    this.toggleHighlights = function(tree, value){
+      for (var key in tree._scope.properties) {
+        if (tree._scope.properties[key] === value){
+          tree.highlights[key] = !tree.highlights[key];
         }else{
-          this.highlights[key] = false;
+          tree.highlights[key] = false;
         }
       }
-      for (var i = 0; i < this._children.length; i++) {
-        this._children[i].toggleHighlights(value);
+      for (var i = 0; i < tree._children.length; i++) {
+        this.toggleHighlights(tree._children[i], value);
       }
     };
 
