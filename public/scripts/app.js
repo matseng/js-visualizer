@@ -1,6 +1,20 @@
 var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
   .controller('MainController', function($scope, $interval, ScopeService) {
-    $scope.codeText = '';
+    // $scope.codeText = '';
+    $scope.codeText = '  \
+var result = [];  \n  \
+var fibonacci = function (n, output ) {  \n  \
+//function fibonacci (n, output) {  \n  \
+  var a = 1, b = 1, sum;  \n  \
+  for (var i = 0; i < n; i++) {  \n  \
+    output.push(a);  \n  \
+    sum = a + b;  \n  \
+    a = b;  \n  \
+    b = sum;  \n  \
+  }  \n  \
+};  \n  \
+fibonacci(4, result);  \n  \
+alert(result.join(", ")); ';
     $scope.prevStatement = '';
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
@@ -22,6 +36,14 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         node = myInterpreter.stateStack[0].node;
         start = node.start;
         end = node.end;
+        console.log(node.type);
+        if(node.type === "FunctionDeclaration" || node.type === "VariableDeclaration"){
+          headerAndBody = segmentFunctionDeclaration($scope.editor.getValue(), start, end);
+          if(headerAndBody){
+            start = headerAndBody.header.start;
+            end = headerAndBody.header.end;
+          }
+        }
       } else {
         start = 0;
         end = 0;

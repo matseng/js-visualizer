@@ -73,17 +73,18 @@ var removeSelfReferences = function(scope){
 
 /*
   Returns an object that includes the header and body indicies of the function declaration
-  The indices are INCLUSIVE of the targeted characters, e.g. programString[result.header.end] will equal ')'
-  and programString[result.body.start] will equal '{'
 */
 var segmentFunctionDeclaration = function(programString, start, end){
-  var result = {};
-  result.header = {};
-  result.body = {};
-  var funcDeclStr = programString.slice(start, end);
-  result.header.start = start;
-  result.header.end = /\)\s*\{/.exec(a).index;
-  result.body.start = /{/.exec(funcDeclStr).index;
-  result.body.end = end;
-  return result;
+  var currStatement = programString.slice(start, end);
+  if(/function/.test(currStatement)){
+    var result = {};
+    result.header = {};
+    result.body = {};
+    result.header.start = start;
+    result.header.end = start + /\)\s*\{/.exec(currStatement).index + 1;  //added 1 to match syntax of ast
+    result.body.start = start+ /{/.exec(currStatement).index;
+    result.body.end = start + end;
+    return result;
+  }
+  return null;
 };
