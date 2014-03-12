@@ -50,12 +50,12 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         if (myInterpreter.stateStack.length === 0) {
           $scope.stopInterval();
         }
-      }, 100);
+      }, 500);
     };
 
     $scope.stopInterval = function() {
       clearInterval($scope.stepInterval);
-      disable('disabled');      
+      disable('disabled');
     };
 
     $scope.stepInButton = function() {
