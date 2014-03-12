@@ -36,6 +36,8 @@ alert(result.join(", ")); ';
         node = myInterpreter.stateStack[0].node;
         start = node.start;
         end = node.end;
+        if(myInterpreter.node_popped)
+          console.log(myInterpreter.node_popped.node.type);
         // console.log(node.type);
         // if(node.type === "FunctionDeclaration" || node.type === "VariableDeclaration"){
         //   headerAndBody = segmentFunctionDeclaration($scope.editor.getValue(), start, end);

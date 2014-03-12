@@ -42,7 +42,7 @@ var Interpreter = function(code, opt_initFunc) {
   /*
   Save last ast node that was popped off of the stateStack
   */
-  this.node_popped = {};
+  this.node_popped = null;
   var that = this;
   var nativeShift = this.stateStack.shift;
   this.stateStack.shift = function(){
