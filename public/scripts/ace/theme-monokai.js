@@ -127,6 +127,9 @@ color: #E6DB74\
 .ace-monokai .ace_comment {\
 color: #75715E\
 }\
+.ace-monokai .ace_marker-layer .ace_dimmer {\
+color: #49483E\
+}\
 .ace-monokai .ace_indent-guide {\
 background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQImWPQ0FD0ZXBzd/wPAAjVAoxeSgNeAAAAAElFTkSuQmCC) right repeat-y\
 }";
