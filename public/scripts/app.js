@@ -91,9 +91,6 @@ alert(result.join(", ")); ';
         var prevNodePopped = myInterpreter.nodePopped;
         var newNodePopped = prevNodePopped;
         var nodePoppedCompleteStatementBoolean;
-        //if(nodePopped)
-        //  nodePoppedCompleteStatementBoolean = isCompleteStatement(programString, nodePopped.node.start, nodePopped.node.end);
-        //while(!nodePopped || !nodePoppedCompleteStatementBoolean){
         while(prevNodePopped === newNodePopped || !nodePoppedCompleteStatementBoolean){
           $scope.stepButton();
           if (myInterpreter.stateStack[0] && myInterpreter.nodePopped) {
