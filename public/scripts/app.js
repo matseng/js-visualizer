@@ -69,20 +69,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       $scope.scopeTree = ScopeService.masterTree;
     };
 
-    var dimFunctionBody = function(editor, startRow, endRow) {
-      for (var i = startRow+1; i < endRow; i++) {
-        $(editor.renderer.$textLayer.element.childNodes[i]).addClass('ace_dimmer');
-        $(editor.renderer.$textLayer.element.childNodes[i].children).addClass('ace_dimmer');
-      }
-    };
-
-    var unDimFunctionBody = function(editor) {
-      for (var i = 0; i < editor.getSession().getLength(); i++) {
-        $(editor.renderer.$textLayer.element.childNodes[i]).removeClass('ace_dimmer');
-        $(editor.renderer.$textLayer.element.childNodes[i].children).removeClass('ace_dimmer');
-      }
-    };
-
     $scope.run = function() {
       if(runInterval){
         pause();
