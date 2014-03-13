@@ -252,7 +252,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       vizTree._parent = this;
     };
     VizTree.prototype.removeDescendant = function(vizTree, validator){
-      //TODO: impliment validator
       var foundNode = this.findNode(vizTree, validator);
       if(foundNode === false){
         console.log("ERR: Node not found.");
@@ -264,15 +263,15 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       });
       return vizTree;
     };
-    VizTree.prototype.flatten = function(){
+    //--------------------
+    var flatten = function(tree){
       var results = [];
-      results.push(this._scope);
-      for (var i = 0; i < this._children.length; i++) {
-        results = results.concat(this._children[i].flatten());
+      results.push(tree._scope);
+      for (var i = 0; i < tree._children.length; i++) {
+        results = results.concat(flatten(tree._children[i]));
       }
       return results;
     };
-    //--------------
     var addScope = function(tree, scope){
       if(scope._parent === null){
         updateVariables(tree, scope);
@@ -352,8 +351,8 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       for (i = 0; i < tempTrees.length-1; i++) {
         addScope(newScopeTree, tempTrees[i]);
       }
-      var newFlattened = newScopeTree.flatten();
-      var oldFlattened = this.masterTree.flatten();
+      var newFlattened = flatten(newScopeTree);
+      var oldFlattened = flatten(this.masterTree);
       var diff = _.difference(oldFlattened, newFlattened);
       var validator = function(a,b){return a._scope === b._scope;};
       for (i = 0; i < diff.length; i++) {
