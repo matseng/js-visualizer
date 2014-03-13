@@ -26,6 +26,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
         $scope.nextNodeType = myInterpreter.stateStack[0].node.type;
+        addReadableText($scope.editor, $scope.nextNodeType);
         if (myInterpreter.stateStack[0].node.type === 'FunctionDeclaration') {
           $scope.nextIsFuncDef = true;
         }
@@ -36,13 +37,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         start = 0;
         end = 0;
       }
-      var annoRange = $scope.editor.getSelection().makeRange(start, end);
-      $scope.editor.getSession().setAnnotations([{
-        row: annoRange.start.row,
-        column: annoRange.start.column,
-        text: $scope.nextNodeType,
-        type: "info"
-      }]);
       $scope.editor.getSelection().setSelectionRangeIndices(start, end);
       $scope.editor.session.clearBreakpoints();
       var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
