@@ -25,8 +25,9 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     $scope.stepButton = function() {
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
-        $scope.nextNodeType = myInterpreter.stateStack[0].node.type;
-        if (myInterpreter.stateStack[0].node.type === 'FunctionDeclaration') {
+        var nextNodeType = myInterpreter.stateStack[0].node.type;
+        addReadableText($scope.editor, nextNodeType);
+        if (nextNodeType === 'FunctionDeclaration') {
           $scope.nextIsFuncDef = true;
         }
         node = myInterpreter.stateStack[0].node;
@@ -36,13 +37,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         start = 0;
         end = 0;
       }
-      var annoRange = $scope.editor.getSelection().makeRange(start, end);
-      $scope.editor.getSession().setAnnotations([{
-        row: annoRange.start.row,
-        column: annoRange.start.column,
-        text: $scope.nextNodeType,
-        type: "info"
-      }]);
       $scope.editor.getSelection().setSelectionRangeIndices(start, end);
       $scope.editor.session.clearBreakpoints();
       var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;

@@ -7276,6 +7276,23 @@ text-indent: -1em;\
 -webkit-user-select: text;\
 user-select: text;\
 }\
+.my_anno {\
+position:absolute;\
+z-index: 0;\
+width: 220px;\
+height: 50px;\
+background: transparent;\
+-moz-appearance: none;\
+appearance: none;\
+padding: 0 1px;\
+bottom: 0;\
+right: 0;\
+}\
+.my_anno_text {\
+font-family:arial;\
+color:grey;\
+font-size:20px;\
+}\
 .ace_text-input.ace_composition {\
 background: #f8f8f8;\
 color: #111;\

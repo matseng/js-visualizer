@@ -82,4 +82,12 @@ var unDimFunctionBody = function(editor) {
     $(editor.renderer.$textLayer.element.childNodes[i].children).removeClass('ace_dimmer');
   }
 };
+var addReadableText = function(editor, text) {
+  $(editor.renderer.container).find('.my_anno').find('p').detach();
+  var $annoDiv = $("<div class='my_anno'></div>");
+  var $p = $("<p class='my_anno_text'></p>");
+  var $pText = $p.append(text);
+  var $myAnno = $annoDiv.append($pText);
+  $(editor.renderer.container).append($myAnno);
+};
 
