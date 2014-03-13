@@ -52,10 +52,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       } finally {
         if (!ok) {
           endSteps($scope);
-          // $scope.disableSteps = true;
-          // $scope.diableRun = true;
-          // $scope.editor.session.clearBreakpoints();
-          // $scope.editor.setReadOnly(false);
         }
       }
       ScopeService.updateScopeViz();
@@ -88,8 +84,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       $interval.cancel(runInterval);
       runInterval = null;
       endSteps($scope);
-      // $scope.disableSteps = true;
-      // $scope.disableRun = true;
     };
 
     $scope.stepInButton = function() {
@@ -117,9 +111,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           }
           if(myInterpreter.stateStack.length === 0) {
             endSteps($scope);
-            // $scope.editor.setReadOnly(false);
-            // $scope.disableSteps = true;
-            // $scope.disableRun = true;
             break;
           }
         }
@@ -143,9 +134,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           }
           if(myInterpreter.stateStack.length === 0) {
             endSteps($scope);
-            // $scope.editor.setReadOnly(false);
-            // $scope.disableSteps = true;
-            // $scope.disableRun = true;
             break;
           }
           $scope.stepButton();
