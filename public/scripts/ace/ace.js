@@ -7276,6 +7276,18 @@ text-indent: -1em;\
 -webkit-user-select: text;\
 user-select: text;\
 }\
+.my_anno {\
+position:absolute;\
+z-index: 0;\
+width: 220px;\
+height: 50px;\
+background: transparent;\
+-moz-appearance: none;\
+appearance: none;\
+padding: 0 1px;\
+bottom: 0;\
+right: 0;\
+}\
 .ace_text-input.ace_composition {\
 background: #f8f8f8;\
 color: #111;\
@@ -16066,6 +16078,10 @@ color: rgb(76, 136, 107);\
 }\
 .ace-tm .ace_dimmer{\
 color: white\
+}\
+.ace-tm .my_anno{\
+color:white;\
+text-align:right\
 }\
 .ace-tm .ace_indent-guide {\
 background: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAE0lEQVQImWP4////f4bLly//BwAmVgd1/w11/gAAAABJRU5ErkJggg==\") right repeat-y;\
