@@ -149,7 +149,48 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
     };
   })
-  .service("ScopeService", [function(){
+  .factory('Tree', function(){
+    var Tree = function(value){
+      this._parent = null;
+      this._children = [];
+      this.value = value;
+    };
+    Tree.prototype.addChild = function(tree){
+      this._children.unshift(tree); // *** this will affect how activescope is found! reverse previous logic
+      tree._parent = this;
+    };
+    Tree.prototype.getRoot = function(){
+      var currentNode = this;
+      while(currentNode._parent !== null){
+        currentNode = currentNode._parent;
+      }
+      return currentNode;
+    };
+    Tree.prototype.findNode = function(tree, validator){
+      validator = validator || function(a,b){return a === b;};
+      if(validator(tree, this)){
+        return this;
+      }
+      var foundNode = _.find(this._children, function(child){
+        return child.findNode(tree, validator);
+      });
+      return foundNode;
+    };
+    Tree.prototype.removeDescendant = function(tree, validator){
+      var foundNode = this.findNode(tree, validator);
+      if(!foundNode){
+        console.log("ERR: Node not found.");
+        return false;
+      }
+      var parent = foundNode._parent;
+      parent._children = _.reject(parent._children, function(vizNode){
+        return validator(vizNode, tree);
+      });
+      return tree;
+    };
+    return Tree;
+  })
+  .service("ScopeService", ['Tree', function(Tree){
     this.masterTree = null;
     this.activeScope = null;
     this.clearScopes = function(){
@@ -218,84 +259,50 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         }
       }
     };
-    var VizTree = function(jsiScope){
-      this._parent = null;
-      this._children = [];
+    var ScopeTree = function(jsiScope){
+      this._scope = jsiScope;
+      _.extend(this, new Tree());
       this.variables = {};
       this.highlights = {};
-      this._scope = jsiScope;
       stringifyProperties(this.variables, jsiScope.properties);
       if(jsiScope.parentScope){
-        this._parent = new VizTree(jsiScope.parentScope);
+        this._parent = new ScopeTree(jsiScope.parentScope);
         this._parent._children.push(this);
       }
     };
-    VizTree.prototype.getRoot = function(){
-      var currentNode = this;
-      while(currentNode._parent !== null){
-        currentNode = currentNode._parent;
-      }
-      return currentNode;
-    };
-    VizTree.prototype.findNode = function(tree, validator){
-      validator = validator || function(a,b){return a === b;};
-      if(validator(tree, this)){
-        return this;
-      }
-      var foundNode = _.find(this._children, function(child){
-        return child.findNode(tree, validator) !== false;
-      });
-      return foundNode || false;
-    };
-    VizTree.prototype.addChild = function(vizTree){
-      this._children.unshift(vizTree);
-      vizTree._parent = this;
-    };
-    VizTree.prototype.removeDescendant = function(vizTree, validator){
-      var foundNode = this.findNode(vizTree, validator);
-      if(foundNode === false){
-        console.log("ERR: Node not found.");
-        return false;
-      }
-      var parent = foundNode._parent;
-      parent._children = _.reject(parent._children, function(vizNode){
-        return validator(vizNode, vizTree);
-      });
-      return vizTree;
-    };
-    //--------------------
-    var flatten = function(tree){
+    ScopeTree.prototype.flatten = function(){
       var results = [];
-      results.push(tree._scope);
-      for (var i = 0; i < tree._children.length; i++) {
-        results = results.concat(flatten(tree._children[i]));
+      results.push(this._scope);
+      for (var i = 0; i < this._children.length; i++) {
+        results = results.concat(this._children[i].flatten());
       }
       return results;
     };
-    var addScope = function(tree, scope){
+    ScopeTree.prototype.addScope  = function(scope){
       if(scope._parent === null){
-        updateVariables(tree, scope);
+        this.updateVariables(scope);
       }else{
         var currentNode = scope;
-        var validator = function(a,b){ return a._scope === b._scope; };
-        var foundNode = tree.findNode(currentNode, validator);
-        while(foundNode === false){
+        var validator = function(a,b){return a._scope === b._scope;};
+        var foundNode = this.findNode(currentNode, validator);
+        while(!foundNode && currentNode._parent){
           currentNode = currentNode._parent;
-          foundNode = tree.findNode(currentNode, validator);
+          foundNode = this.findNode(currentNode, validator);
         }
-        if(currentNode._children.length > 0){
+        if(currentNode._children.length > 0 && foundNode){
           foundNode.addChild(currentNode._children[0]);
         }
       }
     };
-    var updateVariables = function(oldTree, newTree){
+    ScopeTree.prototype.updateVariables = function(newTree){
       var newNames = Object.keys(newTree.variables);
-      var oldVariables = _.pick(oldTree.variables, newNames);
-      oldTree.variables = _.extend(oldVariables, newTree.variables);
-      for (var i = 0; i < oldTree._children.length && i < newTree._children.length; i++) {
-        updateVariables(oldTree._children[i], newTree._children[i]);
+      var oldVariables = _.pick(this.variables, newNames);
+      this.variables = _.extend(oldVariables, newTree.variables);
+      for (var i = 0; i < this._children.length && i < newTree._children.length; i++) {
+        this._children[i].updateVariables(newTree._children[i]);
       }
     };
+        //--------------------
     this.getValue = function(tree, name){
       var result = tree._scope.properties[name];
       if(result === undefined && tree._parent !== null){
@@ -331,32 +338,32 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       if(window.myInterpreter.getScope() === undefined){
         return;
       }
-      var newScope = new VizTree(window.myInterpreter.getScope());
+      var newScope = new ScopeTree(window.myInterpreter.getScope());
       if(this.masterTree === null){
         this.masterTree = newScope.getRoot();
       }else{
-        addScope(this.masterTree, newScope);
-        updateVariables(this.masterTree, newScope.getRoot());
+        this.masterTree.addScope(newScope);
+        this.masterTree.updateVariables(newScope.getRoot());
       }
 
       var tempTrees = [];
       var stateStack = window.myInterpreter.stateStack;
       for (var i = 0; i < stateStack.length; i++) {
         if(stateStack[i].scope){
-          var childNode = new VizTree(stateStack[i].scope);
+          var childNode = new ScopeTree(stateStack[i].scope);
           tempTrees.push(childNode);
         }
       }
       var newScopeTree = _.last(tempTrees);
       for (i = 0; i < tempTrees.length-1; i++) {
-        addScope(newScopeTree, tempTrees[i]);
+        newScopeTree.addScope(tempTrees[i]);
       }
-      var newFlattened = flatten(newScopeTree);
-      var oldFlattened = flatten(this.masterTree);
+      var newFlattened = newScopeTree.flatten();
+      var oldFlattened = this.masterTree.flatten();
       var diff = _.difference(oldFlattened, newFlattened);
       var validator = function(a,b){return a._scope === b._scope;};
       for (i = 0; i < diff.length; i++) {
-        this.masterTree.removeDescendant(new VizTree(diff[i]), validator);
+        this.masterTree.removeDescendant(new ScopeTree(diff[i]), validator);
       }
       this.highlightActiveScope();
     };
