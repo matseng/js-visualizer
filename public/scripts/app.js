@@ -16,9 +16,16 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       $scope.editor.session.clearBreakpoints();
     };
 
+    $scope.nextIsFuncDef = false;
+    $scope.thisNodeType = '', $scope.nextNodeType = '';
     $scope.stepButton = function() {
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
+        $scope.thisNodeType = $scope.nextNodeType;
+        $scope.nextNodeType = myInterpreter.stateStack[0].node.type;
+        if (myInterpreter.stateStack[0].node.type === 'FunctionDeclaration') {
+          $scope.nextIsFuncDef = true;
+        }
         node = myInterpreter.stateStack[0].node;
         start = node.start;
         end = node.end;
@@ -26,12 +33,39 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         start = 0;
         end = 0;
       }
+      var annoRange = $scope.editor.getSelection().makeRange(start, end);
+      $scope.editor.getSession().setAnnotations([{
+        row: annoRange.start.row,
+        column: annoRange.start.column,
+        text: $scope.nextNodeType,
+        type: "info"
+      }]);
       $scope.editor.getSelection().setSelectionRangeIndices(start, end);
+      // console.log($($scope.editor.renderer.content));
       $scope.editor.session.clearBreakpoints();
       var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
+      var endRow = $scope.editor.getSelection().getRowColumnIndices(end).row;
       $scope.editor.session.setBreakpoint([startRow]);
       try {
+        $scope.editor.getSession().removeMarker($scope.markerID);
         ok = myInterpreter.step();
+        if ($scope.nextIsFuncDef === true) {
+          // var $lines = $($scope.editor.renderer.content)[0].childNodes[1].childNodes[2];
+
+
+          var $lines = $($scope.editor.renderer.$textLayer.element.childNodes);
+          for (var i = startRow+1; i < endRow; i++) {
+            $($scope.editor.renderer.$textLayer.element.childNodes[i]).addClass('ace_dimmer');
+            $($scope.editor.renderer.$textLayer.element.childNodes[i].children).addClass('ace_dimmer');
+          }
+          console.log($lines);
+          // dimFunctionBody(start,end);
+          // text = $scope.editor.getValue();
+          // console.log(start, end, text, text.slice(start, end));
+          // var range = $scope.editor.getSelection().makeRangeBtwnRows(start,end);
+          // $scope.markerID = $scope.editor.getSession().addMarker(range, 'ace_dimmer', 'text', true);
+          $scope.nextIsFuncDef = false;
+        }
       } finally {
         if (!ok) {
           disable('disabled');
@@ -41,6 +75,44 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
       ScopeService.updateScopeViz();
       $scope.scopeTree = ScopeService.masterTree;
+    };
+
+
+    var dimFunctionBody = function(start, end) {
+
+      // $scope.editor.getSelection().addClass('ace_comment');
+
+      // $scope.editor.setSelectionStyle('.ace_comment');
+
+      // var cursor = $scope.editor.getSelection().getRowColumnIndices(end-2);
+      // console.log($scope.editor.getSelection().getCursor());
+      // var programString = $scope.editor.getValue();
+      // var functionString = programString.slice(start,end+1);
+      // var leftCurlyBrace = functionString.indexOf('\{');
+      // // console.log(leftCurlyBrace, programString[start+leftCurlyBrace]);
+      // var rightCurlyBrace = functionString.lastIndexOf('\}');
+      // // console.log(rightCurlyBrace, programString[start+rightCurlyBrace]);
+
+
+      // var range = $scope.editor.getSelection().makeRangeBtwnRows(start,end-1);
+      // $scope.editor.toggleBlockCommentDim(range);
+      $scope.editor.toggleBlockComment();
+
+      // var regexp = /\{[\s\S]*\}/;
+      // var functionString = $scope.editor.getValue().slice(start,end-1);
+      // var toDim = functionString.match(regexp)[0].slice(1);
+      // var functionStringArray = functionString.split("\n");
+      // console.log(toDim);
+      // var toDimArray = toDim.split('\n');
+      // console.log(toDimArray.length);
+      // for (var i = 0; i < toDimArray.length; i++) {
+        // console.log("'" + toDimArray[i] + "'");
+      // }
+      // var toDim2 = toDim.replace(/\n/g, "[\s\S]");
+      // toDim = toDim2.replace(/\;/g, "\\;");
+      // var toDim3 = toDim.replace(/\}/g, "\\}");
+      // console.log(toDim2, toDim, toDim3);
+      // $scope.editor.getSession().setMode("ace/mode/js2");     
     };
 
     $scope.runButton = function() {
@@ -105,7 +177,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           if(myInterpreter.stateStack[0]){
             node = myInterpreter.stateStack[0].node;
             start = node.start;
-            var tempEnd = node.end;
           }
           if(myInterpreter.stateStack.length === 0) {
             // $scope.editor.setReadOnly(false);
@@ -314,5 +385,9 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       scope.editor.getSession().setTabSize(2);
       scope.editor.setValue(scope.codeText);
       scope.editor.clearSelection();
+      // scope.editor.setOptions({
+      //   enableBasicAutocompletion: true,
+      //   enableSnippets: true
+      // });
     }
   });
