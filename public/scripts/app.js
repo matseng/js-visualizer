@@ -190,14 +190,50 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
     return Tree;
   })
-  .service("ScopeService", ['Tree', function(Tree){
-    this.masterTree = null;
-    this.activeScope = null;
-    this.clearScopes = function(){
-      this.masterTree = null;
-      this.activeScope = null;
+  .factory("ScopeTree", ['Tree', function(Tree){
+    var ScopeTree = function(jsiScope){
+      this._scope = jsiScope;
+      _.extend(this, new Tree());
+      this.variables = {};
+      this.highlights = {};
+      stringifyProperties(this.variables, jsiScope.properties);
+      if(jsiScope.parentScope){
+        this._parent = new ScopeTree(jsiScope.parentScope);
+        this._parent._children.push(this);
+      }
     };
-
+    ScopeTree.prototype.flatten = function(){
+      var results = [];
+      results.push(this._scope);
+      for (var i = 0; i < this._children.length; i++) {
+        results = results.concat(this._children[i].flatten());
+      }
+      return results;
+    };
+    ScopeTree.prototype.addScope  = function(scope){
+      if(scope._parent === null){
+        this.updateVariables(scope);
+      }else{
+        var currentNode = scope;
+        var validator = function(a,b){return a._scope === b._scope;};
+        var foundNode = this.findNode(currentNode, validator);
+        while(!foundNode && currentNode._parent){
+          currentNode = currentNode._parent;
+          foundNode = this.findNode(currentNode, validator);
+        }
+        if(currentNode._children.length > 0 && foundNode){
+          foundNode.addChild(currentNode._children[0]);
+        }
+      }
+    };
+    ScopeTree.prototype.updateVariables = function(newTree){
+      var newNames = Object.keys(newTree.variables);
+      var oldVariables = _.pick(this.variables, newNames);
+      this.variables = _.extend(oldVariables, newTree.variables);
+      for (var i = 0; i < this._children.length && i < newTree._children.length; i++) {
+        this._children[i].updateVariables(newTree._children[i]);
+      }
+    };
     var stringifyArguments = function(args){
       var result = [];
       for(var i =0; i < args.length; i++){
@@ -259,48 +295,14 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         }
       }
     };
-    var ScopeTree = function(jsiScope){
-      this._scope = jsiScope;
-      _.extend(this, new Tree());
-      this.variables = {};
-      this.highlights = {};
-      stringifyProperties(this.variables, jsiScope.properties);
-      if(jsiScope.parentScope){
-        this._parent = new ScopeTree(jsiScope.parentScope);
-        this._parent._children.push(this);
-      }
-    };
-    ScopeTree.prototype.flatten = function(){
-      var results = [];
-      results.push(this._scope);
-      for (var i = 0; i < this._children.length; i++) {
-        results = results.concat(this._children[i].flatten());
-      }
-      return results;
-    };
-    ScopeTree.prototype.addScope  = function(scope){
-      if(scope._parent === null){
-        this.updateVariables(scope);
-      }else{
-        var currentNode = scope;
-        var validator = function(a,b){return a._scope === b._scope;};
-        var foundNode = this.findNode(currentNode, validator);
-        while(!foundNode && currentNode._parent){
-          currentNode = currentNode._parent;
-          foundNode = this.findNode(currentNode, validator);
-        }
-        if(currentNode._children.length > 0 && foundNode){
-          foundNode.addChild(currentNode._children[0]);
-        }
-      }
-    };
-    ScopeTree.prototype.updateVariables = function(newTree){
-      var newNames = Object.keys(newTree.variables);
-      var oldVariables = _.pick(this.variables, newNames);
-      this.variables = _.extend(oldVariables, newTree.variables);
-      for (var i = 0; i < this._children.length && i < newTree._children.length; i++) {
-        this._children[i].updateVariables(newTree._children[i]);
-      }
+    return ScopeTree;
+  }])
+  .service("ScopeService", ['ScopeTree', function(ScopeTree){
+    this.masterTree = null;
+    this.activeScope = null;
+    this.clearScopes = function(){
+      this.masterTree = null;
+      this.activeScope = null;
     };
         //--------------------
     this.getValue = function(tree, name){
