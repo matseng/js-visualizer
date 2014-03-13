@@ -251,16 +251,16 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       this._children.unshift(vizTree);
       vizTree._parent = this;
     };
-    VizTree.prototype.removeDescendant = function(vizTree){
+    VizTree.prototype.removeDescendant = function(vizTree, validator){
       //TODO: impliment validator
-      var foundNode = this.findNode(vizTree, function(a,b){ return a._scope === b._scope; });
+      var foundNode = this.findNode(vizTree, validator);
       if(foundNode === false){
         console.log("ERR: Node not found.");
         return false;
       }
       var parent = foundNode._parent;
-      parent._children = _.filter(parent._children, function(vizNode){
-        return vizNode._scope !== vizTree._scope;
+      parent._children = _.reject(parent._children, function(vizNode){
+        return validator(vizNode, vizTree);
       });
       return vizTree;
     };
@@ -355,8 +355,9 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       var newFlattened = newScopeTree.flatten();
       var oldFlattened = this.masterTree.flatten();
       var diff = _.difference(oldFlattened, newFlattened);
+      var validator = function(a,b){return a._scope === b._scope;};
       for (i = 0; i < diff.length; i++) {
-        this.masterTree.removeDescendant(new VizTree(diff[i]));
+        this.masterTree.removeDescendant(new VizTree(diff[i]), validator);
       }
       this.highlightActiveScope();
     };
