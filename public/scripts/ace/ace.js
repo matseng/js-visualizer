@@ -2340,7 +2340,6 @@ var Mode = function() {
 
     this.toggleCommentLines = function(state, session, startRow, endRow) {
         var doc = session.doc;
-
         var ignoreBlankLines = true;
         var shouldRemove = true;
         var minIndent = Infinity;
@@ -3401,6 +3400,16 @@ var Selection = function(session) {
         if (this.getRange().isEmpty())
             this.$isEmpty = true;
         this.$desiredColumn = null;
+    };
+    this.makeRange = function(start, end) {
+        var startRowColumn = this.getRowColumnIndices(start);
+        var endRowColumn = this.getRowColumnIndices(end);
+        return new Range(startRowColumn.row, startRowColumn.column, endRowColumn.row, endRowColumn.column);
+    };
+    this.makeRangeBtwnRows = function(start,end) {
+        var startRowColumn = this.getRowColumnIndices(start);
+        var endRowColumn = this.getRowColumnIndices(end);
+        return new Range(startRowColumn.row+1, startRowColumn.column, endRowColumn.row, 0);
     };
     this.setSelectionRangeIndices = function(start, end, reverse) {
         var startRowColumn = this.getRowColumnIndices(start);
@@ -9668,7 +9677,6 @@ var Marker = function(parentEl) {
                 marker.update(html, this, this.session, config);
                 continue;
             }
-
             var range = marker.range.clipRows(config.firstRow, config.lastRow);
             if (range.isEmpty()) continue;
 
@@ -13867,10 +13875,24 @@ var Editor = function(renderer, session) {
             session.replace(deleteRange, lines[i-rows.first]);
         }
     };
+    this.toggleCommentLinesDim = function() {
+        var state = this.session.getState(this.getCursorPosition().row);
+        var rows = this.$getSelectedRows();
+        this.session.getMode().toggleCommentLines(state, this.session, rows.first+1, rows.last-1);
+    };
+
+
     this.toggleCommentLines = function() {
         var state = this.session.getState(this.getCursorPosition().row);
         var rows = this.$getSelectedRows();
         this.session.getMode().toggleCommentLines(state, this.session, rows.first, rows.last);
+    };
+
+    this.toggleBlockCommentDim = function(range) {
+        var cursor = this.getCursorPosition();
+        var state = this.session.getState(cursor.row);
+        // var range = this.getSelectionRange();
+        this.session.getMode().toggleBlockComment(state, this.session, range, cursor);
     };
 
     this.toggleBlockComment = function() {
@@ -16036,6 +16058,14 @@ background-color : #dcdcdc;\
 .ace-tm .ace_marker-layer .ace_selected-word {\
 background: rgb(250, 250, 255);\
 border: 1px solid rgb(200, 200, 250);\
+}\
+.ace_marker-layer .ace_dimmer{\
+position: absolute;\
+z-index: 10000;\
+color: rgb(76, 136, 107);\
+}\
+.ace-tm .ace_dimmer{\
+color: white\
 }\
 .ace-tm .ace_indent-guide {\
 background: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAE0lEQVQImWP4////f4bLly//BwAmVgd1/w11/gAAAABJRU5ErkJggg==\") right repeat-y;\

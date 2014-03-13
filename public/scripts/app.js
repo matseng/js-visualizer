@@ -21,9 +21,14 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       ScopeService.clearScopes();
     };
 
+    $scope.nextIsFuncDef = false;
     $scope.stepButton = function() {
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
+        $scope.nextNodeType = myInterpreter.stateStack[0].node.type;
+        if (myInterpreter.stateStack[0].node.type === 'FunctionDeclaration') {
+          $scope.nextIsFuncDef = true;
+        }
         node = myInterpreter.stateStack[0].node;
         start = node.start;
         end = node.end;
@@ -31,13 +36,25 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         start = 0;
         end = 0;
       }
+      var annoRange = $scope.editor.getSelection().makeRange(start, end);
+      $scope.editor.getSession().setAnnotations([{
+        row: annoRange.start.row,
+        column: annoRange.start.column,
+        text: $scope.nextNodeType,
+        type: "info"
+      }]);
       $scope.editor.getSelection().setSelectionRangeIndices(start, end);
       $scope.editor.session.clearBreakpoints();
       var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
+      var endRow = $scope.editor.getSelection().getRowColumnIndices(end).row;
       $scope.editor.session.setBreakpoint([startRow]);
-      isCompleteStatement(start, end);
       try {
+        unDimFunctionBody($scope.editor);
         ok = myInterpreter.step();
+        if ($scope.nextIsFuncDef === true) {
+          dimFunctionBody($scope.editor,startRow,endRow);
+          $scope.nextIsFuncDef = false;
+        }
       } finally {
         if (!ok) {
           $scope.disableSteps = true;
@@ -126,7 +143,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           if(myInterpreter.stateStack[0]){
             node = myInterpreter.stateStack[0].node;
             start = node.start;
-            var tempEnd = node.end;
           }
           if(myInterpreter.stateStack.length === 0) {
             // $scope.editor.setReadOnly(false);
@@ -363,6 +379,5 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       scope.editor.getSession().setTabSize(2);
       scope.editor.setValue(scope.codeText);
       scope.editor.clearSelection();
-      scope.editor.renderer.setShowGutter(true);
     }
   });

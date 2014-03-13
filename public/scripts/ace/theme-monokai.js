@@ -127,6 +127,29 @@ color: #E6DB74\
 .ace-monokai .ace_comment {\
 color: #75715E\
 }\
+.ace-monokai .ace_line.ace_dimmer,\
+.ace-monokai .ace_punctuation.ace_dimmer, \
+.ace-monokai .ace_punctuation.ace_tag.ace_dimmer, \
+.ace-monokai .ace_punctuation.ace_operator.ace_dimmer, \
+.ace-monokai .ace_support.ace_constant.ace_dimmer, \
+.ace-monokai .ace_support.ace_function.ace_dimmer,  \
+.ace-monokai ace_identifier.ace_dimmer, \
+.ace-monokai .ace_storage.ace_type.ace_dimmer,\
+.ace-monokai .ace_keyword.ace_dimmer, \
+.ace-monokai .ace_keyword.ace_operator.ace_dimmer, \
+.ace-monokai .ace_constant.ace_character.ace_dimmer, \
+.ace-monokai .ace_constant.ace_language.ace_dimmer, \
+.ace-monokai .ace_constant.ace_numeric.ace_dimmer, \
+.ace-monokai .ace_constant.ace_other.ace_dimmer,  \
+.ace-monokai .ace_entity.ace_name.ace_function.ace_dimmer,\
+.ace-monokai .ace_entity.ace_other.ace_dimmer,\
+.ace-monokai .ace_entity.ace_other.ace_attribute-name.ace_dimmer,\
+.ace-monokai .ace_variable.ace_dimmer {\
+color: #75715E\
+}\
+.ace-monokai .ace_marker-layer .ace_dimmer {\
+color: #49483E\
+}\
 .ace-monokai .ace_indent-guide {\
 background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQImWPQ0FD0ZXBzd/wPAAjVAoxeSgNeAAAAAElFTkSuQmCC) right repeat-y\
 }";
