@@ -149,7 +149,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
     };
   })
-  .service("ScopeService", function(){
+  .service("ScopeService", [function(){
     this.masterTree = null;
     this.activeScope = null;
     this.clearScopes = function(){
@@ -219,11 +219,11 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
     };
     var VizTree = function(jsiScope){
-      this._scope = jsiScope;
       this._parent = null;
       this._children = [];
       this.variables = {};
       this.highlights = {};
+      this._scope = jsiScope;
       stringifyProperties(this.variables, jsiScope.properties);
       if(jsiScope.parentScope){
         this._parent = new VizTree(jsiScope.parentScope);
@@ -239,11 +239,11 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
     VizTree.prototype.findNode = function(tree, validator){
       validator = validator || function(a,b){return a === b;};
-      if(validator(tree._scope, this._scope)){
+      if(validator(tree, this)){
         return this;
       }
       var foundNode = _.find(this._children, function(child){
-        return child.findNode(tree) !== false;
+        return child.findNode(tree, validator) !== false;
       });
       return foundNode || false;
     };
@@ -252,7 +252,8 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       vizTree._parent = this;
     };
     VizTree.prototype.removeDescendant = function(vizTree){
-      var foundNode = this.findNode(vizTree);
+      //TODO: impliment validator
+      var foundNode = this.findNode(vizTree, function(a,b){ return a._scope === b._scope; });
       if(foundNode === false){
         console.log("ERR: Node not found.");
         return false;
@@ -277,10 +278,11 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         updateVariables(tree, scope);
       }else{
         var currentNode = scope;
-        var foundNode = tree.findNode(currentNode);
+        var validator = function(a,b){ return a._scope === b._scope; };
+        var foundNode = tree.findNode(currentNode, validator);
         while(foundNode === false){
           currentNode = currentNode._parent;
-          foundNode = tree.findNode(currentNode);
+          foundNode = tree.findNode(currentNode, validator);
         }
         if(currentNode._children.length > 0){
           foundNode.addChild(currentNode._children[0]);
@@ -358,7 +360,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
       this.highlightActiveScope();
     };
-  })
+  }])
   .directive('aceEditor', function() {
     return {
       require: '?ngModel',
