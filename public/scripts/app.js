@@ -22,11 +22,9 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
 
     $scope.nextIsFuncDef = false;
-    $scope.thisNodeType = '', $scope.nextNodeType = '';
     $scope.stepButton = function() {
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
-        $scope.thisNodeType = $scope.nextNodeType;
         $scope.nextNodeType = myInterpreter.stateStack[0].node.type;
         if (myInterpreter.stateStack[0].node.type === 'FunctionDeclaration') {
           $scope.nextIsFuncDef = true;
