@@ -1,4 +1,4 @@
-var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
+var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree',])
   .controller('MainController', function($scope, $interval, ScopeService) {
     var runInterval;
     $scope.disableSteps = true;
@@ -149,154 +149,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
     };
   })
-  .factory('Tree', function(){
-    var Tree = function(value){
-      this._parent = null;
-      this._children = [];
-      this.value = value;
-    };
-    Tree.prototype.addChild = function(tree){
-      this._children.unshift(tree); // *** this will affect how activescope is found! reverse previous logic
-      tree._parent = this;
-    };
-    Tree.prototype.getRoot = function(){
-      var currentNode = this;
-      while(currentNode._parent !== null){
-        currentNode = currentNode._parent;
-      }
-      return currentNode;
-    };
-    Tree.prototype.findNode = function(tree, validator){
-      validator = validator || function(a,b){return a === b;};
-      if(validator(tree, this)){
-        return this;
-      }
-      var foundNode = _.find(this._children, function(child){
-        return child.findNode(tree, validator);
-      });
-      return foundNode;
-    };
-    Tree.prototype.removeDescendant = function(tree, validator){
-      var foundNode = this.findNode(tree, validator);
-      if(!foundNode){
-        console.log("ERR: Node not found.");
-        return false;
-      }
-      var parent = foundNode._parent;
-      parent._children = _.reject(parent._children, function(vizNode){
-        return validator(vizNode, tree);
-      });
-      return tree;
-    };
-    return Tree;
-  })
-  .factory("ScopeTree", ['Tree', function(Tree){
-    var ScopeTree = function(jsiScope){
-      this._scope = jsiScope;
-      _.extend(this, new Tree());
-      this.variables = {};
-      this.highlights = {};
-      stringifyProperties(this.variables, jsiScope.properties);
-      if(jsiScope.parentScope){
-        this._parent = new ScopeTree(jsiScope.parentScope);
-        this._parent._children.push(this);
-      }
-    };
-    ScopeTree.prototype.flatten = function(){
-      var results = [];
-      results.push(this._scope);
-      for (var i = 0; i < this._children.length; i++) {
-        results = results.concat(this._children[i].flatten());
-      }
-      return results;
-    };
-    ScopeTree.prototype.addScope  = function(scope){
-      if(scope._parent === null){
-        this.updateVariables(scope);
-      }else{
-        var currentNode = scope;
-        var validator = function(a,b){return a._scope === b._scope;};
-        var foundNode = this.findNode(currentNode, validator);
-        while(!foundNode && currentNode._parent){
-          currentNode = currentNode._parent;
-          foundNode = this.findNode(currentNode, validator);
-        }
-        if(currentNode._children.length > 0 && foundNode){
-          foundNode.addChild(currentNode._children[0]);
-        }
-      }
-    };
-    ScopeTree.prototype.updateVariables = function(newTree){
-      var newNames = Object.keys(newTree.variables);
-      var oldVariables = _.pick(this.variables, newNames);
-      this.variables = _.extend(oldVariables, newTree.variables);
-      for (var i = 0; i < this._children.length && i < newTree._children.length; i++) {
-        this._children[i].updateVariables(newTree._children[i]);
-      }
-    };
-    var stringifyArguments = function(args){
-      var result = [];
-      for(var i =0; i < args.length; i++){
-        result.push(i+' : '+args.properties[i]);
-      }
-      if(args.length > 0){
-        return '{' + result.join(', ') + ', length : ' + args.length +'}';
-      }else{
-        return '{' + result.join(', ') + 'length : ' + args.length +'}';
-      }
-    };
-
-    var globalVarKeys =
-      {'Infinity' : true,
-      'NaN' : true,
-      'undefined' : true,
-      'window' : true,
-      'self' : true,
-      'Function': true,
-      'Object': true,
-      'Array': true,
-      'Number': true,
-      'String': true,
-      'Boolean': true,
-      'Date' : true ,
-      'Math' : true,
-      'isNaN' : true,
-      'isFinite' : true,
-      'parseFloat' : true,
-      'parseInt' : true,
-      'eval' : true,
-      'escape' : true,
-      'unescape' : true,
-      'decodeURI' : true,
-      'decodeURIComponent' : true,
-      'encodeURI' : true,
-      'encodeURIComponent' : true,
-      'alert' : true
-    };
-    var stringifyProperties = function(variables, properties){
-      for(var key in properties){
-        if(globalVarKeys[key] !== undefined){
-          continue;
-        }
-        if(key === "arguments"){
-          variables[key] = stringifyArguments(properties[key]);
-        }else if(properties[key] === undefined){
-          variables[key] = "undefined";
-        }else if(properties[key].type === "object"){
-          variables[key] = "{}";
-        }else if(properties[key].type === "function"){
-          variables[key] = "function(){}";
-        }else if(properties[key].data === Infinity){
-          variables[key] = "Infinity";
-        }else if(properties[key].data === undefined){
-          variables[key] = "undefined";
-        }else{
-          variables[key] = properties[key].data;
-        }
-      }
-    };
-    return ScopeTree;
-  }])
   .service("ScopeService", ['ScopeTree', function(ScopeTree){
     this.masterTree = null;
     this.activeScope = null;
@@ -304,7 +156,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       this.masterTree = null;
       this.activeScope = null;
     };
-        //--------------------
     this.getValue = function(tree, name){
       var result = tree._scope.properties[name];
       if(result === undefined && tree._parent !== null){
