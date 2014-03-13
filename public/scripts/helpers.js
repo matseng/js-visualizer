@@ -90,4 +90,9 @@ var addReadableText = function(editor, text) {
   var $myAnno = $annoDiv.append($pText);
   $(editor.renderer.container).append($myAnno);
 };
-
+var endSteps = function(scope) {
+  scope.disableSteps = true;
+  scope.diableRun = true;
+  scope.editor.session.clearBreakpoints();
+  scope.editor.setReadOnly(false);
+}
