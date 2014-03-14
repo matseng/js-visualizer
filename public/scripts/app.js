@@ -2,9 +2,8 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
   .controller('MainController', function($scope, $interval, ScopeService) {
     // $scope.codeText = '';
     $scope.codeText = '  \
-var result = [];  \n  \
+var result = [1, 2, 3];  \n  \
 var fibonacci = function (n, output ) {  \n  \
-//function fibonacci (n, output) {  \n  \
   var a = 1, b = 1, sum;  \n  \
   for (var i = 0; i < n; i++) {  \n  \
     output.push(a);  \n  \
@@ -13,8 +12,21 @@ var fibonacci = function (n, output ) {  \n  \
     b = sum;  \n  \
   }  \n  \
 };  \n  \
-fibonacci(4, result);  \n  \
+\n  \
+function fibonacci2(n, output ) {  \n  \
+  var a = 1, b = 1, sum;  \n  \
+  for (var i = 0; i < n; i++) {  \n  \
+    output.push(a);  \n  \
+    sum = a + b;  \n  \
+    a = b;  \n  \
+    b = sum;  \n  \
+  }  \n  \
+};  \n  \
+\n  \
+fibonacci2(4, result);  \n  \
 alert(result.join(", ")); ';
+    $scope.prevScope = {};
+    $scope.prevShallowScope = {};  //saves the previous scope of the interpreter
     $scope.prevStatement = '';
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
@@ -28,6 +40,19 @@ alert(result.join(", ")); ';
       myInterpreter = new Interpreter(code, initAlert);
       disable('');
       $scope.editor.session.clearBreakpoints();
+
+      var scopeCloneProp = cloneObject(myInterpreter.getScope().properties);
+      var pause;
+      // $scope.prevScope = _.extend(true, {}, myInterpreter.getScope());
+      // $scope.prevShallowScope = (function(){
+      //   var scope = myInterpreter.getScope();
+      //   var shallowScope = {};
+      //   for(var key in scope){
+      //     var val = scope[key];
+      //     shallowScope[key] = val;
+      //   }
+      //   return shallowScope;
+      // })();
     };
 
     $scope.stepButton = function() {
@@ -54,7 +79,6 @@ alert(result.join(", ")); ';
       $scope.editor.session.clearBreakpoints();
       var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
       $scope.editor.session.setBreakpoint([startRow]);
-      isCompleteStatement(start, end);
       try {
         ok = myInterpreter.step();
       } finally {
@@ -66,6 +90,15 @@ alert(result.join(", ")); ';
       }
       ScopeService.updateScopeViz();
       $scope.scopeTree = ScopeService.masterTree;
+
+      console.log("prevScope props: %o", $scope.prevScope);
+      console.log("new Scope props: %o", myInterpreter.getScope());
+      console.log("type of statement", myInterpreter.stateStack[0].node.type);
+      var programString = $scope.editor.getValue();
+      console.log('isCompleteStatement: ' + isCompleteStatement(myInterpreter.stateStack[0].node, start, end));
+      if($scope.prevScope !== myInterpreter.getScope()){
+        console.log("  new Scope properties are different!");
+      }
     };
 
     $scope.runButton = function() {
@@ -82,7 +115,27 @@ alert(result.join(", ")); ';
       disable('disabled');
     };
 
-    $scope.stepInButton = function() {
+    $scope.stepInButton = function(){
+      if (myInterpreter.stateStack[0]) {
+        var node = myInterpreter.stateStack[0].node;
+        var start = node.start;
+        var end = node.end;
+        var programString = $scope.editor.getValue();
+        var currStatement = programString.slice(start,end);
+        var completeStatementBoolean = isCompleteStatement(myInterpreter.stateStack[0].node, start, end);
+        $scope.stepButton();
+        var pause;
+        while(!completeStatementBoolean){
+          node = myInterpreter.stateStack[0].node;
+          start = node.start;
+          end = node.end;
+          currStatement = programString.slice(start,end);
+          completeStatementBoolean = isCompleteStatement(myInterpreter.stateStack[0].node, start, end);
+          $scope.stepButton();
+        }
+      }
+    };
+    $scope.stepInButton_old = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
         var start = node.start;

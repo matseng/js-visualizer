@@ -12,7 +12,17 @@ var disable = function(disabled) {
   document.getElementById('stepOverButton').disabled = disabled;
   document.getElementById('runButton').disabled = disabled;
 };
-var isCompleteStatement = function(programString, start, end){
+
+var isCompleteStatement = function(node, start, end){
+  var typeString = node.type;  // e.g. Program, VariableDeclaration, EmptyStatement, ExpressionStatement 
+  if(/Empty/.test(typeString) || /Block/.test(typeString))
+    return false;
+  if(/Statement/.test(typeString) || /Declaration/.test(typeString))
+    return true;
+  return false;
+
+};
+var isCompleteStatement_old = function(programString, start, end){
   // var str = $scope.editor.getValue();
   var currChar;
   for(var i = end; i < programString.length; i++){
@@ -87,4 +97,34 @@ var segmentFunctionDeclaration = function(programString, start, end){
     return result;
   }
   return null;
+};
+
+/*
+  Clones the scope object while avoiding circular references
+*/
+var cloneObject = function(obj){  //input should be scope.properties
+  var cloneObj = {};
+  for(var key in obj){
+    if (key !== 'parent' && key !== 'valueOf'){
+      var type;
+      if(Array.isArray(obj[key])){
+        type = 'array';
+      } else if(obj[key] === null){
+        type = 'null';
+      }
+      else{
+        type = typeof obj[key];
+      }
+      if(type === 'null'){
+        cloneObj[key] = null;
+      }
+      else if(type !== 'object'){
+        cloneObj[key] = obj[key];
+      }
+      else{
+        cloneObj[key] = cloneObject(obj[key]);
+      }
+    }
+  }
+  return cloneObj;
 };
