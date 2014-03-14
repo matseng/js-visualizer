@@ -3,6 +3,22 @@ angular.module('ScopeTree', ['Tree'])
     var ScopeTree = function(jsiScope){
       Tree.apply(this, arguments);
       this._scope = jsiScope;
+      //find scope name
+      var getScopeName = function(jsiStateStack){
+        var name = "";
+        for (var i = 0; i < jsiStateStack.length; i++) {
+          if (jsiStateStack[i].scope === jsiScope) {
+            break;//jsiScope =  jsiStateStack[i].scope;
+          }
+        }
+        if(jsiStateStack[i+1]){
+          name = jsiStateStack[i+1].node.callee.name;
+        }else{
+          name = 'Global';
+        }
+        return name;
+      }
+      this.name = getScopeName(window.myInterpreter.stateStack);
       this.variables = {};
       this.highlights = {};
       stringifyProperties(this.variables, jsiScope.properties);
