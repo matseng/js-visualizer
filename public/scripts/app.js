@@ -111,10 +111,10 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           } else {
             break;
           }
-          // if(myInterpreter.stateStack.length === 0) {
-          //   break;
-          // }
         }
+      }
+      if(myInterpreter.stateStack.length === 0) {
+        endSteps($scope);
       }
     };
     $scope.stepOverButton = function(){
@@ -132,13 +132,14 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           if(myInterpreter.stateStack[0]){
             node = myInterpreter.stateStack[0].node;
             start = node.start;
-          }
-          if(myInterpreter.stateStack.length === 0) {
-            endSteps($scope);
+          } else {
             break;
           }
           $scope.stepButton();
         }
+      }
+      if(myInterpreter.stateStack.length === 0) {
+        endSteps($scope);
       }
     };
   })
