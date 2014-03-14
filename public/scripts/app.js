@@ -1,16 +1,18 @@
-var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
+var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree'])
   .controller('MainController', function($scope, $interval, ScopeService) {
     var runInterval;
     $scope.disableSteps = true;
     $scope.disableRun = true;
     $scope.codeText = '';
     $scope.prevStatement = '';
+    //scopeviz
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
       var value = ScopeService.getValue(scopeTree, name);
       ScopeService.toggleHighlights(root, value);
     };
 
+    //editor
     $scope.parseButton = function() {
       $scope.editor.setReadOnly(true);
       var code = $scope.editor.getValue();
@@ -143,48 +145,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
     };
   })
-  .factory('Tree', function(){
-    var Tree = function(value){
-      this._parent = null;
-      this._children = [];
-      this.value = value;
-    };
-    Tree.prototype.addChild = function(tree){
-      this._children.unshift(tree); // *** this will affect how activescope is found! reverse previous logic
-      tree._parent = this;
-    };
-    Tree.prototype.getRoot = function(){
-      var currentNode = this;
-      while(currentNode._parent !== null){
-        currentNode = currentNode._parent;
-      }
-      return currentNode;
-    };
-    Tree.prototype.findNode = function(tree, validator){
-      validator = validator || function(a,b){return a === b;};
-      if(validator(tree, this)){
-        return this;
-      }
-      var foundNode = _.find(this._children, function(child){
-        return child.findNode(tree, validator);
-      });
-      return foundNode;
-    };
-    Tree.prototype.removeDescendant = function(tree, validator){
-      var foundNode = this.findNode(tree, validator);
-      if(!foundNode){
-        console.log("ERR: Node not found.");
-        return false;
-      }
-      var parent = foundNode._parent;
-      parent._children = _.reject(parent._children, function(vizNode){
-        return validator(vizNode, tree);
-      });
-      return tree;
-    };
-    return Tree;
-  })
-  .service("ScopeService", ['Tree', function(Tree){
+  .service("ScopeService", ['ScopeTree', function(ScopeTree){
     this.masterTree = null;
     this.activeScope = null;
     this.clearScopes = function(){
@@ -294,7 +255,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         this._children[i].updateVariables(newTree._children[i]);
       }
     };
-        //--------------------
     this.getValue = function(tree, name){
       var result = tree._scope.properties[name];
       if(result === undefined && tree._parent !== null){
@@ -353,11 +313,18 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       var newFlattened = newScopeTree.flatten();
       var oldFlattened = this.masterTree.flatten();
       var diff = _.difference(oldFlattened, newFlattened);
-      var validator = function(a,b){return a._scope === b._scope;};
+      // var validator = function(a,b){return a._scope === b._scope;};
       for (i = 0; i < diff.length; i++) {
-        this.masterTree.removeDescendant(new ScopeTree(diff[i]), validator);
+        this.masterTree.removeDescendant(new ScopeTree(diff[i]));
       }
       this.highlightActiveScope();
+    };
+  }])
+  .service('TimeMachine', ['ScopeTree' ,function(ScopeTree){
+    this.history = [];
+    var Diff = function(){
+      this.prev = null;
+      this.next = null;
     };
   }])
   .directive('aceEditor', function() {
