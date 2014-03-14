@@ -88,6 +88,37 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree'])
       endSteps($scope);
     };
 
+    $scope.stepMarcusButton = function() {
+      if (myInterpreter.stateStack[0]) {
+        var node = myInterpreter.stateStack[0].node;
+        var start = node.start;
+        var end = node.end;
+        var programString = $scope.editor.getValue();
+        var currStatement = programString.slice(start,end);
+        var currCompleteStatement = isCompleteStatement(programString, start, end);
+        $scope.stepButton();
+        while($scope.prevStatement === currStatement || currCompleteStatement === false || currStatement === programString.trim()){
+          if(myInterpreter.stateStack[0]){
+            node = myInterpreter.stateStack[0].node;
+            start = node.start;
+            end = node.end;
+            if (isCompleteStatement(programString, start, end)) {
+              if (currCompleteStatement === true) {
+                $scope.prevStatement = currStatement;
+              }
+              currCompleteStatement = true;
+              currStatement = programString.slice(start,end);
+            }
+            $scope.stepButton();
+          } else {
+            break;
+          }
+        }
+      }
+      if(myInterpreter.stateStack.length === 0) {
+        endSteps($scope);
+      }
+    };
     $scope.stepInButton = function() {
       if (myInterpreter.stateStack[0]) {
         var node = myInterpreter.stateStack[0].node;
