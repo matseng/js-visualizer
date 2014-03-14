@@ -1,16 +1,18 @@
-var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree',])
+var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree'])
   .controller('MainController', function($scope, $interval, ScopeService) {
     var runInterval;
     $scope.disableSteps = true;
     $scope.disableRun = true;
     $scope.codeText = '';
     $scope.prevStatement = '';
+    //scopeviz
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
       var value = ScopeService.getValue(scopeTree, name);
       ScopeService.toggleHighlights(root, value);
     };
 
+    //editor
     $scope.parseButton = function() {
       // $scope.editor.setReadOnly(true);
       var code = $scope.editor.getValue();
@@ -214,11 +216,18 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree',])
       var newFlattened = newScopeTree.flatten();
       var oldFlattened = this.masterTree.flatten();
       var diff = _.difference(oldFlattened, newFlattened);
-      var validator = function(a,b){return a._scope === b._scope;};
+      // var validator = function(a,b){return a._scope === b._scope;};
       for (i = 0; i < diff.length; i++) {
-        this.masterTree.removeDescendant(new ScopeTree(diff[i]), validator);
+        this.masterTree.removeDescendant(new ScopeTree(diff[i]));
       }
       this.highlightActiveScope();
+    };
+  }])
+  .service('TimeMachine', ['ScopeTree' ,function(ScopeTree){
+    this.history = [];
+    var Diff = function(){
+      this.prev = null;
+      this.next = null;
     };
   }])
   .directive('aceEditor', function() {
