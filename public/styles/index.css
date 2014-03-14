@@ -256,25 +256,27 @@ svg {
 .scopeWrapper.ng-enter,
 .scopeWrapper.ng-leave
 {
-    /*-webkit-transition: 400ms ease-in-out all;*/
-    /*-moz-transition: 400ms ease-in-out all;*/
-    /*-ms-transition: 400ms ease-in-out all;*/
-    /*-o-transition: 400ms ease-in-out all;*/
-    /*transition: 400ms ease-in-out all;*/
-    /*position: relative;*/
-    /*display: inline-block;*/
+    -webkit-transition: all 1s cubic-bezier(.60, 0, .40, 1);
+    -moz-transition: all 1s cubic-bezier(.60, 0, .40, 1);
+    -o-transition: all 1s cubic-bezier(.60, 0, .40, 1);
+    transition: all 1s cubic-bezier(.60, 0, .40, 1);
 }
 
-.scopeWrapper.ng-enter {
-  -webkit-animation: slideInDown 0.5s;
-  -moz-animation: slideInDown 0.5s;
-  -ms-animation: slideInDown 0.5s;
-  animation: slideInDown 0.5s;
+.scopeWrapper.ng-enter{
+  opacity:0;
+  max-height:0px;
 }
-
 .scopeWrapper.ng-leave{
-  -webkit-animation: slideOutUp 0.5s;
-  -moz-animation: slideOutUp 0.5s;
-  -ms-animation: slideOutUp 0.5s;
-  animation: slideOutUp 0.5s;
+  max-height:1000px;
+  opacity:1;
 }
+.scopeWrapper.ng-enter.ng-enter-active {
+  max-height:1000px;
+  opacity: 1;
+}
+
+.scopeWrapper.ng-leave.ng-leave-active{
+  max-height:0px;
+  opacity: 0;
+}
+
