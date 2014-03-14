@@ -12,7 +12,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     };
 
     $scope.parseButton = function() {
-      // $scope.editor.setReadOnly(true);
+      $scope.editor.setReadOnly(true);
       var code = $scope.editor.getValue();
       myInterpreter = new Interpreter(code, initAlert);
       $scope.disableRun = false;
@@ -21,14 +21,14 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       ScopeService.clearScopes();
     };
 
-    $scope.nextIsFuncDef = false;
     $scope.stepButton = function() {
+      var nextIsFuncDef = false;
       var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
         var nextNodeType = myInterpreter.stateStack[0].node.type;
         addReadableText($scope.editor, nextNodeType);
         if (nextNodeType === 'FunctionDeclaration') {
-          $scope.nextIsFuncDef = true;
+          nextIsFuncDef = true;
         }
         node = myInterpreter.stateStack[0].node;
         start = node.start;
@@ -45,16 +45,13 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       try {
         unDimFunctionBody($scope.editor);
         ok = myInterpreter.step();
-        if ($scope.nextIsFuncDef === true) {
+        if (nextIsFuncDef === true) {
           dimFunctionBody($scope.editor,startRow,endRow);
-          $scope.nextIsFuncDef = false;
+          nextIsFuncDef = false;
         }
       } finally {
         if (!ok) {
-          $scope.disableSteps = true;
-          $scope.diableRun = true;
-          $scope.editor.session.clearBreakpoints();
-          // $scope.editor.setReadOnly(false);
+          endSteps($scope);
         }
       }
       ScopeService.updateScopeViz();
@@ -86,8 +83,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     var stop = function() {
       $interval.cancel(runInterval);
       runInterval = null;
-      $scope.disableSteps = true;
-      $scope.disableRun = true;
+      endSteps($scope);
     };
 
     $scope.stepInButton = function() {
@@ -112,14 +108,13 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
               currStatement = programString.slice(start,end);
             }
             $scope.stepButton();
-          }
-          if(myInterpreter.stateStack.length === 0) {
-            // $scope.editor.setReadOnly(false);
-            $scope.disableSteps = true;
-            $scope.disableRun = true;
+          } else {
             break;
           }
         }
+      }
+      if(myInterpreter.stateStack.length === 0) {
+        endSteps($scope);
       }
     };
     $scope.stepOverButton = function(){
@@ -137,15 +132,14 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
           if(myInterpreter.stateStack[0]){
             node = myInterpreter.stateStack[0].node;
             start = node.start;
-          }
-          if(myInterpreter.stateStack.length === 0) {
-            // $scope.editor.setReadOnly(false);
-            $scope.disableSteps = true;
-            $scope.disableRun = true;
+          } else {
             break;
           }
           $scope.stepButton();
         }
+      }
+      if(myInterpreter.stateStack.length === 0) {
+        endSteps($scope);
       }
     };
   })
@@ -197,7 +191,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       this.masterTree = null;
       this.activeScope = null;
     };
-
     var stringifyArguments = function(args){
       var result = [];
       for(var i =0; i < args.length; i++){
@@ -209,7 +202,6 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         return '{' + result.join(', ') + 'length : ' + args.length +'}';
       }
     };
-
     var globalVarKeys =
       {'Infinity' : true,
       'NaN' : true,
