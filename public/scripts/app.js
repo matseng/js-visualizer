@@ -7,8 +7,8 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
     $scope.prevStatement = '';
     $scope.highlight = function(scopeTree, name){
       var root = scopeTree.getRoot();
-      var value = scopeTree.getValueOf(name);
-      root.toggleHighlights(value);
+      var value = ScopeService.getValue(scopeTree, name);
+      ScopeService.toggleHighlights(root, value);
     };
 
     $scope.parseButton = function() {
@@ -143,7 +143,48 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
     };
   })
-  .service("ScopeService", function(){
+  .factory('Tree', function(){
+    var Tree = function(value){
+      this._parent = null;
+      this._children = [];
+      this.value = value;
+    };
+    Tree.prototype.addChild = function(tree){
+      this._children.unshift(tree); // *** this will affect how activescope is found! reverse previous logic
+      tree._parent = this;
+    };
+    Tree.prototype.getRoot = function(){
+      var currentNode = this;
+      while(currentNode._parent !== null){
+        currentNode = currentNode._parent;
+      }
+      return currentNode;
+    };
+    Tree.prototype.findNode = function(tree, validator){
+      validator = validator || function(a,b){return a === b;};
+      if(validator(tree, this)){
+        return this;
+      }
+      var foundNode = _.find(this._children, function(child){
+        return child.findNode(tree, validator);
+      });
+      return foundNode;
+    };
+    Tree.prototype.removeDescendant = function(tree, validator){
+      var foundNode = this.findNode(tree, validator);
+      if(!foundNode){
+        console.log("ERR: Node not found.");
+        return false;
+      }
+      var parent = foundNode._parent;
+      parent._children = _.reject(parent._children, function(vizNode){
+        return validator(vizNode, tree);
+      });
+      return tree;
+    };
+    return Tree;
+  })
+  .service("ScopeService", ['Tree', function(Tree){
     this.masterTree = null;
     this.activeScope = null;
     this.clearScopes = function(){
@@ -210,43 +251,18 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
         }
       }
     };
-    var VizTree = function(jsiScope){
+    var ScopeTree = function(jsiScope){
       this._scope = jsiScope;
-      this._parent = null;
-      this._children = [];
+      _.extend(this, new Tree());
       this.variables = {};
       this.highlights = {};
       stringifyProperties(this.variables, jsiScope.properties);
       if(jsiScope.parentScope){
-        this._parent = new VizTree(jsiScope.parentScope);
+        this._parent = new ScopeTree(jsiScope.parentScope);
         this._parent._children.push(this);
       }
     };
-    VizTree.prototype.findNode = function(vizTree){
-      if(vizTree._scope === this._scope){
-        return this;
-      }
-      for (var i = 0; i < this._children.length; i++) {
-        var foundNode = this._children[i].findNode(vizTree);
-        if( foundNode !== false){
-          return foundNode;
-        }
-      }
-      return false;
-    };
-    VizTree.prototype.addChild = function(vizTree){
-      this._children.unshift(vizTree);
-      vizTree._parent = this;
-    };
-    VizTree.prototype.updateVariables = function(vizTree){
-      var newNames = Object.keys(vizTree.variables);
-      var oldVariables = _.pick(this.variables, newNames);
-      this.variables = _.extend(oldVariables, vizTree.variables);
-      for (var i = 0; i < this._children.length && i < vizTree._children.length; i++) {
-        this._children[i].updateVariables(vizTree._children[i]);
-      }
-    };
-    VizTree.prototype.flatten = function(){
+    ScopeTree.prototype.flatten = function(){
       var results = [];
       results.push(this._scope);
       for (var i = 0; i < this._children.length; i++) {
@@ -254,92 +270,49 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       }
       return results;
     };
-    VizTree.prototype.add = function(vizTree){
-      if(vizTree._parent === null){
-        this.updateVariables(vizTree);
+    ScopeTree.prototype.addScope  = function(scope){
+      if(scope._parent === null){
+        this.updateVariables(scope);
       }else{
-        var currentNode = vizTree;
-        var foundNode = this.findNode(currentNode);
-        while(foundNode === false){
+        var currentNode = scope;
+        var validator = function(a,b){return a._scope === b._scope;};
+        var foundNode = this.findNode(currentNode, validator);
+        while(!foundNode && currentNode._parent){
           currentNode = currentNode._parent;
-          foundNode = this.findNode(currentNode);
+          foundNode = this.findNode(currentNode, validator);
         }
-        if(currentNode._children.length > 0){
+        if(currentNode._children.length > 0 && foundNode){
           foundNode.addChild(currentNode._children[0]);
         }
       }
     };
-    VizTree.prototype.getRoot = function(){
-      var currentNode = this;
-      while(currentNode._parent !== null){
-        currentNode = currentNode._parent;
+    ScopeTree.prototype.updateVariables = function(newTree){
+      var newNames = Object.keys(newTree.variables);
+      var oldVariables = _.pick(this.variables, newNames);
+      this.variables = _.extend(oldVariables, newTree.variables);
+      for (var i = 0; i < this._children.length && i < newTree._children.length; i++) {
+        this._children[i].updateVariables(newTree._children[i]);
       }
-      return currentNode;
     };
-    VizTree.prototype.getValueOf = function(name){
-      var result = this._scope.properties[name];
-      if(result === undefined && this._parent !== null){
-        result = this._parent.getValueOf(name);
+        //--------------------
+    this.getValue = function(tree, name){
+      var result = tree._scope.properties[name];
+      if(result === undefined && tree._parent !== null){
+        result = getValue(tree._parent, name);
       }
       return result;
     };
-    VizTree.prototype.toggleHighlights = function(value){
-      for (var key in this._scope.properties) {
-        if (this._scope.properties[key] === value){
-          this.highlights[key] = !this.highlights[key];
+    this.toggleHighlights = function(tree, value){
+      for (var key in tree._scope.properties) {
+        if (tree._scope.properties[key] === value){
+          tree.highlights[key] = !tree.highlights[key];
         }else{
-          this.highlights[key] = false;
+          tree.highlights[key] = false;
         }
       }
-      for (var i = 0; i < this._children.length; i++) {
-        this._children[i].toggleHighlights(value);
+      for (var i = 0; i < tree._children.length; i++) {
+        this.toggleHighlights(tree._children[i], value);
       }
-    };
-    VizTree.prototype.remove = function(vizTree){
-      var foundNode = this.findNode(vizTree);
-      if(foundNode === false){
-        console.log("ERR: Node not found.");
-        return false;
-      }
-      var parent = foundNode._parent;
-      parent._children = _.filter(parent._children, function(vizNode){
-        return vizNode._scope !== vizTree._scope;
-      });
-      return vizTree;
-    };
-    this.updateScopeViz = function(){
-      //add new
-      if(window.myInterpreter.getScope() === undefined){
-        return;
-      }
-      var newScope = new VizTree(window.myInterpreter.getScope());
-      if(this.masterTree === null){
-        this.masterTree = newScope.getRoot();
-      }else{
-        this.masterTree.add(newScope);
-        this.masterTree.updateVariables(newScope.getRoot());
-      }
-
-      //remove old
-      var tempTrees = [];
-      var stateStack = window.myInterpreter.stateStack;
-      for (var i = 0; i < stateStack.length; i++) {
-        if(stateStack[i].scope){
-          var childNode = new VizTree(stateStack[i].scope);
-          tempTrees.push(childNode);
-        }
-      }
-      var newScopeTree = _.last(tempTrees);
-      for (i = 0; i < tempTrees.length-1; i++) {
-        newScopeTree.add(tempTrees[i]);
-      }
-      var newFlattened = newScopeTree.flatten();
-      var oldFlattened = this.masterTree.flatten();
-      var diff = _.difference(oldFlattened, newFlattened);
-      for (i = 0; i < diff.length; i++) {
-        this.masterTree.remove(new VizTree(diff[i]));
-      }
-      this.highlightActiveScope();
     };
     this.highlightActiveScope = function(){
       var currentNode = this.masterTree;
@@ -352,7 +325,41 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate'])
       this.activeScope = currentNode;
       currentNode.active = true;
     };
-  })
+    this.updateScopeViz = function(){
+      //add new
+      if(window.myInterpreter.getScope() === undefined){
+        return;
+      }
+      var newScope = new ScopeTree(window.myInterpreter.getScope());
+      if(this.masterTree === null){
+        this.masterTree = newScope.getRoot();
+      }else{
+        this.masterTree.addScope(newScope);
+        this.masterTree.updateVariables(newScope.getRoot());
+      }
+
+      var tempTrees = [];
+      var stateStack = window.myInterpreter.stateStack;
+      for (var i = 0; i < stateStack.length; i++) {
+        if(stateStack[i].scope){
+          var childNode = new ScopeTree(stateStack[i].scope);
+          tempTrees.push(childNode);
+        }
+      }
+      var newScopeTree = _.last(tempTrees);
+      for (i = 0; i < tempTrees.length-1; i++) {
+        newScopeTree.addScope(tempTrees[i]);
+      }
+      var newFlattened = newScopeTree.flatten();
+      var oldFlattened = this.masterTree.flatten();
+      var diff = _.difference(oldFlattened, newFlattened);
+      var validator = function(a,b){return a._scope === b._scope;};
+      for (i = 0; i < diff.length; i++) {
+        this.masterTree.removeDescendant(new ScopeTree(diff[i]), validator);
+      }
+      this.highlightActiveScope();
+    };
+  }])
   .directive('aceEditor', function() {
     return {
       require: '?ngModel',
