@@ -73,7 +73,9 @@ var removeSelfReferences = function(scope){
 var dimFunctionBody = function(editor, startRow, endRow) {
   for (var i = startRow+1; i < endRow; i++) {
     $(editor.renderer.$textLayer.element.childNodes[i]).addClass('ace_dimmer');
-    $(editor.renderer.$textLayer.element.childNodes[i].children).addClass('ace_dimmer');
+    // if (editor.renderer.$textLayer.element.childNodes[i].children) {
+      $(editor.renderer.$textLayer.element.childNodes[i].children).addClass('ace_dimmer');
+    // }
   }
 };
 var unDimFunctionBody = function(editor) {
@@ -96,5 +98,28 @@ var endSteps = function(scope) {
   scope.editor.session.clearBreakpoints();
   scope.editor.clearSelection();
   scope.editor.setReadOnly(false);
-}
+};
+var isCompleteStatement = function(node, start, end){
+  var typeString = node.type;  // e.g. Program, VariableDeclaration, EmptyStatement, ExpressionStatement 
+  if(/Empty/.test(typeString) || /Block/.test(typeString))
+    return false;
+  if(/Statement/.test(typeString) || /Declaration/.test(typeString))
+    return true;
+  return false;
+};
 
+var marcusFilter_OLD = function(typeString){
+  if(/Empty/.test(typeString) || /Block/.test(typeString) || /Program/.test(typeString) || /VariableDeclaration/.test(typeString))
+    return false;
+  return true;
+};
+var marcusFilter = function(nodePopped){
+  var nodePoppedTypeString;
+  if(nodePopped)
+    nodePoppedTypeString = nodePopped.node.type;
+  if(/Empty/.test(nodePoppedTypeString) || /Block/.test(nodePoppedTypeString) || /Program/.test(nodePoppedTypeString) || /VariableDeclaration/.test(nodePoppedTypeString))
+    return false;
+  if(!nodePopped)
+    return false;
+  return true;
+};
