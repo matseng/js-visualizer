@@ -21,10 +21,13 @@ angular.module('Tree', [])
       if(validator(tree, this)){
         return this;
       }
-      var foundNode = _.find(this._children, function(child){
-        return child.findNode(tree, validator);
-      });
-      return foundNode;
+      for (var i = 0; i < this._children.length; i++) {
+        var foundNode = this._children[i].findNode(tree, validator);
+        if(foundNode){
+          return foundNode;
+        }
+      }
+      return undefined;
     };
     Tree.prototype.removeDescendant = function(tree, validator){
       var foundNode = this.findNode(tree, validator);

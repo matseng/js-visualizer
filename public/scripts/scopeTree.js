@@ -1,6 +1,6 @@
 angular.module('ScopeTree', ['Tree'])
   .factory("ScopeTree", ['Tree', function(Tree){
-    var ScopeTree = function(jsiScope){
+    var ScopeTree = function(jsiScope, closureScope){
       Tree.apply(this, arguments);
       this._scope = jsiScope;
       var getScopeName = function(jsiStateStack){
@@ -10,8 +10,10 @@ angular.module('ScopeTree', ['Tree'])
             break;//jsiScope =  jsiStateStack[i].scope;
           }
         }
-        if(jsiStateStack[i+1]){
+        if(jsiStateStack[i+1] && closureScope !== false){
           name = jsiStateStack[i+1].node.callee.name;
+        }else if(closureScope === false){
+          name = 'Closure Scope';
         }else{
           name = 'Global';
         }
@@ -22,11 +24,38 @@ angular.module('ScopeTree', ['Tree'])
       this.highlights = {};
       stringifyProperties(this.variables, jsiScope.properties);
       if(jsiScope.parentScope){
-        this._parent = new ScopeTree(jsiScope.parentScope);
+        this._parent = new ScopeTree(jsiScope.parentScope, closureScope);
         this._parent._children.push(this);
       }
     };
     ScopeTree.prototype = Object.create(Tree.prototype);
+    ScopeTree.prototype.addClosures = function(){
+      var properties = this._scope.properties;
+      for(var key in properties){
+        if(properties[key] && properties[key].type === 'function' &&
+           globalVarKeys[key] !== true){
+          // console.log(properties[key]);
+          if(properties[key].parentScope &&
+            this.getRoot().contains(properties[key].parentScope) === false){
+            this.addScope(new ScopeTree(properties[key].parentScope, false));
+          }
+        }
+      }
+    };
+    ScopeTree.prototype.contains = function(jsiScope){
+      if(this._scope === jsiScope){
+        return true;
+      }
+      // console.log(this._scope, " !== ", jsiScope);
+      var result = false;
+      for (var i = 0; i < this._children.length; i++) {
+        result = this._children[i].contains(jsiScope);
+        if(result){
+          break;
+        }
+      }
+      return result
+    };
     ScopeTree.prototype.flatten = function(){
       var results = [];
       results.push(this._scope);
@@ -36,6 +65,9 @@ angular.module('ScopeTree', ['Tree'])
       return results;
     };
     ScopeTree.prototype.addScope  = function(scope){
+      while(scope._children[0]){
+        scope = scope._children[0];
+      }
       if(scope._parent === null){
         this.updateVariables(scope);
       }else{
@@ -48,8 +80,12 @@ angular.module('ScopeTree', ['Tree'])
         }
         if(currentNode._children.length > 0 && foundNode){
           foundNode.addChild(currentNode._children[0]);
+          return true;
+        }else{
+          return false;
         }
       }
+      return false;
     };
     ScopeTree.prototype.updateVariables = function(newTree){
       var newNames = Object.keys(newTree.variables);
