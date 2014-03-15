@@ -89,35 +89,90 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree'])
     };
 
     $scope.stepMarcusButton = function() {
+      var nextIsFuncDef = false;
+      var node, start, end, ok;
       if (myInterpreter.stateStack[0]) {
-        var node = myInterpreter.stateStack[0].node;
-        var start = node.start;
-        var end = node.end;
-        var programString = $scope.editor.getValue();
-        var currStatement = programString.slice(start,end);
-        var currCompleteStatement = isCompleteStatement(programString, start, end);
-        $scope.stepButton();
-        while($scope.prevStatement === currStatement || currCompleteStatement === false || currStatement === programString.trim()){
-          if(myInterpreter.stateStack[0]){
-            node = myInterpreter.stateStack[0].node;
-            start = node.start;
-            end = node.end;
-            if (isCompleteStatement(programString, start, end)) {
-              if (currCompleteStatement === true) {
-                $scope.prevStatement = currStatement;
-              }
-              currCompleteStatement = true;
-              currStatement = programString.slice(start,end);
-            }
-            $scope.stepButton();
-          } else {
+        var nextNodeType = myInterpreter.stateStack[0].node.type;
+        // addReadableText($scope.editor, nextNodeType);
+        if (nextNodeType === 'FunctionDeclaration') {
+          nextIsFuncDef = true;
+        }
+        node = myInterpreter.stateStack[0].node;
+        start = node.start;
+        end = node.end;
+      } else {
+        start = 0;
+        end = 0;
+      }
+
+      var nodePopped = myInterpreter.nodePopped;
+      while(!marcusFilter(nodePopped)){
+      //while( !(nodePopped) || !(marcusFilter(nodePopped.node.type))){
+      // while( !(nodePopped)){
+
+        try {
+          unDimFunctionBody($scope.editor);
+          ok = myInterpreter.step();
+        } finally {
+          if (!ok) {
+            endSteps($scope);
             break;
           }
         }
+
+        nodePopped = myInterpreter.nodePopped;
+
       }
-      if(myInterpreter.stateStack.length === 0) {
-        endSteps($scope);
+
+      var poppedStart = nodePopped.node.start;
+      var poppedEnd = nodePopped.node.end;
+      $scope.editor.getSelection().setSelectionRangeIndices(poppedStart, poppedEnd);
+      var startRow = $scope.editor.getSelection().getRowColumnIndices(poppedStart).row;
+      var endRow = $scope.editor.getSelection().getRowColumnIndices(poppedEnd).row;
+
+      if (nodePopped.node.type === 'FunctionDeclaration') {
+        dimFunctionBody($scope.editor,startRow,endRow);
       }
+      addReadableText($scope.editor, nodePopped.node.type);
+      $scope.editor.session.clearBreakpoints();
+      $scope.editor.session.setBreakpoint([startRow]);
+      myInterpreter.nodePopped = null;
+
+
+      // if(myInterpreter.nodePopped){
+        // console.log(myInterpreter.nodePopped.node.type);
+        // var nodePopped = myInterpreter.nodePopped;
+        // console.log(nodePopped);
+        // myInterpreter.nodePopped = null;
+        // poppedStart = nodePopped.node.start;
+        // poppedEnd = nodePopped.node.end;
+        // if (marcusFilter(nodePopped.node.type)) {
+        //   $scope.editor.getSelection().setSelectionRangeIndices(poppedStart, poppedEnd);
+        // }
+      //   myInterpreter.nodePopped = null;
+      // } else{
+      //   console.log("No node popped");
+      // }
+
+      // $scope.editor.session.clearBreakpoints();
+      // var startRow = $scope.editor.getSelection().getRowColumnIndices(start).row;
+      // var endRow = $scope.editor.getSelection().getRowColumnIndices(end).row;
+      // $scope.editor.session.setBreakpoint([startRow]);
+      //   try {
+      //     unDimFunctionBody($scope.editor);
+      //     ok = myInterpreter.step();
+      //     if (nextIsFuncDef === true) {
+      //       dimFunctionBody($scope.editor,startRow,endRow);
+      //       nextIsFuncDef = false;
+      //     }
+      //   } finally {
+      //     if (!ok) {
+      //       endSteps($scope);
+      //     }
+      //   }
+
+      ScopeService.updateScopeViz();
+      $scope.scopeTree = ScopeService.masterTree;
     };
     $scope.stepInButton = function() {
       if (myInterpreter.stateStack[0]) {
