@@ -223,6 +223,7 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree'])
         this.masterTree = newScope.getRoot();
       }else{
         this.masterTree.addScope(newScope);
+        this.masterTree.addClosures();
         this.masterTree.updateVariables(newScope.getRoot());
       }
 
@@ -238,10 +239,12 @@ var jsvis = angular.module('jsvis', ['ngRoute','ngAnimate', 'ScopeTree'])
       for (i = 0; i < tempTrees.length-1; i++) {
         newScopeTree.addScope(tempTrees[i]);
       }
+      if(newScopeTree){
+        newScopeTree.addClosures();
+      }
       var newFlattened = newScopeTree.flatten();
       var oldFlattened = this.masterTree.flatten();
       var diff = _.difference(oldFlattened, newFlattened);
-      // var validator = function(a,b){return a._scope === b._scope;};
       for (i = 0; i < diff.length; i++) {
         this.masterTree.removeDescendant(new ScopeTree(diff[i]));
       }
